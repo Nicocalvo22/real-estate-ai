@@ -53,6 +53,16 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Custom color palette
+        findy: {
+          fuchsia: "#FF007F",
+          magenta: "#FF006B",
+          electric: "#00BFFF",
+          lightgray: "#E5E5E5",
+          mediumgray: "#888888",
+          orange: "#FF8C00",
+          skyblue: "#87CEEB",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -7,7 +7,7 @@ export interface PropertyDetails {
   price: number
   bedrooms: number
   bathrooms: number
-  squareFeet: number
+  squareMeters: number
   yearBuilt: number
   propertyType: string
   listingStatus: string
@@ -18,7 +18,12 @@ export interface PropertyDetails {
   longitude?: number
   daysOnMarket: number
   listingDate: string
-  source: "redfin" | "zillow" | "mls" | "internal"
+  source: "redfin" | "zillow" | "mls" | "internal" | "zonaprop" | "csv"
+  // ZonaProp-specific fields
+  vendor?: string
+  originalUrl?: string
+  totalM2?: number
+  coveredM2?: number
 }
 
 export interface PropertyValuation {
@@ -33,7 +38,7 @@ export interface PropertyValuation {
     date: string
     value: number
   }[]
-  source: "zillow" | "internal"
+  source: "zillow" | "internal" | "zonaprop" | "csv"
 }
 
 export interface MarketTrend {
@@ -45,7 +50,7 @@ export interface MarketTrend {
   inventoryCount: number
   month: number
   year: number
-  source: "redfin" | "zillow" | "mls" | "internal"
+  source: "redfin" | "zillow" | "mls" | "internal" | "zonaprop" | "csv"
 }
 
 export interface NeighborhoodInfo {

@@ -1,0 +1,6 @@
+id,address,city,state,zipCode,price,bedrooms,bathrooms,squareFeet,yearBuilt,propertyType,listingStatus,latitude,longitude,daysOnMarket,listingDate,description
+1,"123 Main St","Austin","TX","78701",450000,3,2,1800,2010,"single-family","active",30.2672,-97.7431,15,"2024-01-15","Beautiful modern home in downtown Austin with updated kitchen and spacious backyard"
+2,"456 Oak Ave","Austin","TX","78702",385000,2,2,1200,2015,"condo","active",30.2500,-97.7300,22,"2024-01-10","Stylish condo in trendy East Austin with walking distance to restaurants"
+3,"789 Pine Dr","San Antonio","TX","78209",320000,4,3,2200,2005,"single-family","active",29.4241,-98.4936,8,"2024-01-20","Spacious family home with large yard and great school district"
+4,"321 Elm St","Houston","TX","77001",520000,3,2.5,1900,2018,"townhouse","active",29.7604,-95.3698,31,"2024-01-05","Modern townhouse in downtown Houston with rooftop terrace"
+5,"654 Maple Ln","Dallas","TX","75201",675000,4,3.5,2800,2020,"single-family","active",32.7767,-96.7970,12,"2024-01-18","Luxury home in prestigious Dallas neighborhood with premium finishes"

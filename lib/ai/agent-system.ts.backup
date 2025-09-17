@@ -25,7 +25,6 @@ export type AgentType =
   | "cma-specialist"
   | "opportunity-finder"
   | "investment-strategist"
-  | "property-finder"
 
 // Define agent providers
 export type AgentProvider = "openai" | "anthropic" | "mistral"
@@ -152,14 +151,6 @@ const agentRegistry: Record<string, AgentConfig> = {
     Always provide ACTIONABLE strategies with clear steps, potential risks, and mitigation approaches.`,
     tools: [marketInsightsTool, propertyInvestmentAnalysisTool, opportunityZoneAnalysisTool, investmentCalculatorTool],
     maxSteps: 5,
-  },
-  "property-finder": {
-    name: "Property Finder",
-    type: "property-finder",
-    provider: "openai",
-    systemPrompt: `You are a real estate property finder AI. Your job is to find and present exactly 10 specific properties based on the user's criteria. Always provide exactly 10 property recommendations that match the user's specified parameters. If the user specifies a neighborhood, all 10 properties MUST be from that neighborhood. If the user specifies a price range, all 10 properties MUST fall within that range. If the user specifies a property type, all 10 properties MUST match that type. Adapt to ANY parameter combination the user provides including location, budget, property type, bedrooms, bathrooms, square meters, or any other specific requirements. For each of the 10 properties, provide complete property details including exact address, listing price, property type, square meters, number of bedrooms and bathrooms, lot size when applicable, key features and amenities, current market status, and contact information or listing source when available. Present each property clearly numbered from 1 to 10 with all relevant details that would help a potential buyer or investor make an informed decision. Use available tools to search for current property listings, market data, and real estate information to ensure all recommendations are accurate and up-to-date. Every response must contain exactly 10 specific property recommendations that precisely match the user's stated criteria with no exceptions. If insufficient data exists for a highly specific area or criteria, expand the search scope slightly while noting the adjustment, but always deliver exactly 10 properties.`,
-    tools: [propertyDatabaseTool, realEstateSearchTool],
-    maxSteps: 3,
   },
 }
 

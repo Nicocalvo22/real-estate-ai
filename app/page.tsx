@@ -5,14 +5,15 @@ import { redirect } from "next/navigation"
 import { ArrowRight, BarChart3, Building, Search, TrendingUp } from "lucide-react"
 
 export default async function Home() {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // TEMPORALMENTE DESHABILITADO - Para habilitar autenticación, descomenta:
+  // const supabase = createClient()
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser()
 
-  if (user) {
-    redirect("/dashboard")
-  }
+  // if (user) {
+  //   redirect("/dashboard")
+  // }
 
   return (
     <div className="flex flex-col min-h-screen">

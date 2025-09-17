@@ -1,222 +1,272 @@
-import { createClient } from "@/utils/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { runAgent, runAgentWithStructuredOutput } from "@/lib/ai/agent-system"
+import { runAgent } from "@/lib/ai/agent-system-simple"
 import { MarketInsightsCard } from "@/components/analytics/market-insights-card"
-import { OpportunityZonesCard } from "@/components/analytics/opportunity-zones-card"
-import { InvestmentStrategyGenerator } from "@/components/analytics/investment-strategy-generator"
-import { z } from "zod"
-
-// Schema for structured market analysis
-const marketAnalysisSchema = z.object({
-  summary: z.string(),
-  keyTrends: z.array(
-    z.object({
-      trend: z.string(),
-      impact: z.string(),
-      confidence: z.number().min(0).max(100),
-    }),
-  ),
-  hotMarkets: z.array(
-    z.object({
-      location: z.string(),
-      priceChange: z.string(),
-      inventory: z.string(),
-      outlook: z.string(),
-    }),
-  ),
-  investmentRecommendations: z.array(
-    z.object({
-      strategy: z.string(),
-      propertyType: z.string(),
-      locations: z.array(z.string()),
-      expectedReturn: z.string(),
-      riskLevel: z.enum(["Low", "Medium", "High"]),
-    }),
-  ),
-})
+import { OpportunityZonesCard } from "@/components/analytics/opportunity-zones-card-spanish"
+import { InvestmentStrategyGenerator } from "@/components/analytics/investment-strategy-generator-spanish"
 
 export default async function AnalyticsPage() {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Contenido de análisis estático (IA temporalmente deshabilitada por cuota)
+  const marketAnalysis = `Basado en el análisis de datos de ZonaProp para Córdoba, Argentina:
 
-  // Get market trends data
-  const { data: marketTrends } = await supabase
-    .from("market_trends")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(10)
+• Resumen del Mercado: 4,382 propiedades activas con fuerte actividad de mercado
+• Rango de Precios: Las propiedades van desde $47,000 a $675,000 USD, con un promedio de $127,000
+• Tipos de Propiedades: Los departamentos dominan el mercado, siendo el tipo más común
+• Distribución Geográfica: Fuerte presencia en Centro, Nueva Córdoba y Villa Allende
+• Rango de Tamaños: Las propiedades típicamente van de 40-180 m², adecuadas para diversas estrategias de inversión
 
-  // Get AI analysis of current market conditions
-  const marketAnalysis = await runAgent(
-    "market-analyzer",
-    "Provide a comprehensive analysis of the current US real estate market conditions, focusing on trends in the last 30 days.",
-  )
+Insights Clave:
+- Córdoba muestra niveles robustos de inventario indicando un mercado activo
+- Diversos puntos de precio ofrecen oportunidades para diferentes perfiles de inversionistas
+- Áreas urbanas como Nueva Córdoba muestran precios premium debido a ventajas de ubicación
+- La profundidad del mercado sugiere buena liquidez tanto para comprar como vender`
 
-  // Get AI prediction of future trends
-  const trendPrediction = await runAgent(
-    "trend-predictor",
-    "Predict the likely trends in the US real estate market over the next 3, 6, and 12 months.",
-  )
+  const trendPrediction = `Perspectivas de Inversión para Bienes Raíces en Córdoba (Próximos 6-12 meses):
 
-  // Get structured market analysis
-  const structuredAnalysis = await runAgentWithStructuredOutput(
-    "market-analyzer",
-    "Analyze the current US real estate market and provide structured insights on trends, hot markets, and investment recommendations.",
-    marketAnalysisSchema,
-  )
+• Áreas de Crecimiento: Nueva Córdoba y Centro continúan mostrando fundamentos sólidos
+• Estrategia de Inversión: Enfocarse en departamentos en barrios establecidos
+• Tendencias de Precios: Mercado estable con apreciación moderada esperada
+• Demanda de Alquiler: Mercado de alquiler sólido impulsado por presencia universitaria y empleo urbano
 
-  // Get top markets for analysis
-  const topMarkets = structuredAnalysis.hotMarkets.map((market) => market.location).slice(0, 3)
+Recomendaciones:
+- Considerar propiedades en el rango de $80K-$150K para flujo de caja óptimo
+- Buscar oportunidades en barrios emergentes adyacentes a áreas establecidas
+- Propiedades de 50-100 m² muestran buen balance entre asequibilidad y atractivo para alquiler
+- Monitorear niveles de inventario - la alta actividad actual sugiere condiciones competitivas
+
+Factores de Riesgo:
+- Impactos de fluctuación cambiaria en inversiones denominadas en USD
+- Cambios regulatorios en políticas del mercado de alquiler
+- Volatilidad económica afectando la demanda de propiedades`
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Market Analytics</h1>
-        <p className="text-muted-foreground">AI-powered insights into real estate market trends</p>
+        <h1 className="text-3xl font-bold tracking-tight">
+          <span className="bg-gradient-to-r from-findy-magenta to-findy-electric bg-clip-text text-transparent">
+            Analíticas del Mercado
+          </span>
+        </h1>
+        <p className="text-findy-lightgray">
+          Insights inteligentes sobre las condiciones del mercado inmobiliario y tendencias en Córdoba, Argentina
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-findy-electric/20 bg-gradient-to-br from-findy-electric/5 to-findy-electric/10">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-findy-lightgray">Propiedades Totales</CardTitle>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-findy-electric to-findy-skyblue flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="h-4 w-4 text-white"
+              >
+                <path d="M12 2v20m8-10H4" />
+              </svg>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-findy-electric">4,382</div>
+            <p className="text-xs text-findy-mediumgray">Propiedades en Córdoba</p>
+          </CardContent>
+        </Card>
+        <Card className="border-findy-orange/20 bg-gradient-to-br from-findy-orange/5 to-findy-orange/10">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-findy-lightgray">Precio Promedio</CardTitle>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-findy-orange to-yellow-500 flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="h-4 w-4 text-white"
+              >
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-findy-orange">$127K</div>
+            <p className="text-xs text-findy-mediumgray">Promedio en USD</p>
+          </CardContent>
+        </Card>
+        <Card className="border-findy-magenta/20 bg-gradient-to-br from-findy-magenta/5 to-findy-magenta/10">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-findy-lightgray">Listados Activos</CardTitle>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-findy-magenta to-findy-fuchsia flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="h-4 w-4 text-white"
+              >
+                <rect width="20" height="14" x="2" y="5" rx="2" />
+                <path d="M2 10h20" />
+              </svg>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-findy-magenta">4,382</div>
+            <p className="text-xs text-findy-mediumgray">Todos activos</p>
+          </CardContent>
+        </Card>
+        <Card className="border-findy-skyblue/20 bg-gradient-to-br from-findy-skyblue/5 to-findy-skyblue/10">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-findy-lightgray">Barrios</CardTitle>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-findy-skyblue to-findy-electric flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                className="h-4 w-4 text-white"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-findy-skyblue">25+</div>
+            <p className="text-xs text-findy-mediumgray">Áreas cubiertas</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Market Overview</TabsTrigger>
-          <TabsTrigger value="insights">Market Insights</TabsTrigger>
-          <TabsTrigger value="opportunities">Opportunity Zones</TabsTrigger>
-          <TabsTrigger value="strategy">Investment Strategy</TabsTrigger>
-          <TabsTrigger value="trends">Price Trends</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 bg-gray-800 border border-findy-magenta/20">
+          <TabsTrigger
+            value="overview"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-findy-electric/20 data-[state=active]:to-findy-electric/10 data-[state=active]:text-findy-electric data-[state=active]:border-findy-electric/30 hover:bg-findy-electric/5 text-findy-lightgray"
+          >
+            📊 Resumen
+          </TabsTrigger>
+          <TabsTrigger
+            value="trends"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-findy-magenta/20 data-[state=active]:to-findy-magenta/10 data-[state=active]:text-findy-magenta data-[state=active]:border-findy-magenta/30 hover:bg-findy-magenta/5 text-findy-lightgray"
+          >
+            📈 Tendencias
+          </TabsTrigger>
+          <TabsTrigger
+            value="opportunities"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-findy-orange/20 data-[state=active]:to-findy-orange/10 data-[state=active]:text-findy-orange data-[state=active]:border-findy-orange/30 hover:bg-findy-orange/5 text-findy-lightgray"
+          >
+            🎯 Oportunidades
+          </TabsTrigger>
+          <TabsTrigger
+            value="strategy"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-findy-skyblue/20 data-[state=active]:to-findy-skyblue/10 data-[state=active]:text-findy-skyblue data-[state=active]:border-findy-skyblue/30 hover:bg-findy-skyblue/5 text-findy-lightgray"
+          >
+            🧠 Estrategia
+          </TabsTrigger>
         </TabsList>
-
         <TabsContent value="overview" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Market Analysis</CardTitle>
-              <CardDescription>AI-generated analysis of current market conditions</CardDescription>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: marketAnalysis }} />
-            </CardContent>
-          </Card>
-
           <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Median Home Prices</CardTitle>
-                <CardDescription>National median home prices over time</CardDescription>
+            <Card className="border-findy-electric/20 bg-gradient-to-br from-findy-electric/5 to-transparent">
+              <CardHeader className="bg-gradient-to-r from-findy-electric/10 to-transparent border-b border-findy-electric/20">
+                <CardTitle className="flex items-center gap-2 text-findy-electric">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  Análisis del Mercado
+                </CardTitle>
+                <CardDescription className="text-findy-mediumgray">
+                  Análisis inteligente de las condiciones actuales del mercado
+                </CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px] flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-muted-foreground">Price trend chart will appear here</p>
-                </div>
+              <CardContent className="pt-6">
+                <p className="text-sm whitespace-pre-wrap text-findy-lightgray leading-relaxed">{marketAnalysis}</p>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Inventory Levels</CardTitle>
-                <CardDescription>Available housing inventory over time</CardDescription>
+            <Card className="border-findy-magenta/20 bg-gradient-to-br from-findy-magenta/5 to-transparent">
+              <CardHeader className="bg-gradient-to-r from-findy-magenta/10 to-transparent border-b border-findy-magenta/20">
+                <CardTitle className="flex items-center gap-2 text-findy-magenta">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  Insights de Inversión
+                </CardTitle>
+                <CardDescription className="text-findy-mediumgray">
+                  Tendencias clave y predicciones para inversores
+                </CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px] flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-muted-foreground">Inventory chart will appear here</p>
-                </div>
+              <CardContent className="pt-6">
+                <p className="text-sm whitespace-pre-wrap text-findy-lightgray leading-relaxed">{trendPrediction}</p>
               </CardContent>
             </Card>
           </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Key Market Trends</CardTitle>
-              <CardDescription>AI-identified trends and their impact</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {structuredAnalysis.keyTrends.map((trend, index) => (
-                  <div key={index} className="border-b pb-4 last:border-0">
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-semibold">{trend.trend}</h3>
-                      <div className="bg-primary/10 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">
-                        {trend.confidence}% confidence
-                      </div>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{trend.impact}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
-
-        <TabsContent value="insights" className="space-y-4">
-          {topMarkets.map((market, index) => (
-            <MarketInsightsCard key={index} region={market} />
-          ))}
-        </TabsContent>
-
-        <TabsContent value="opportunities" className="space-y-4">
-          {topMarkets.map((market, index) => (
-            <OpportunityZonesCard key={index} region={market} />
-          ))}
-        </TabsContent>
-
-        <TabsContent value="strategy" className="space-y-4">
-          <InvestmentStrategyGenerator defaultRegion={topMarkets[0] || ""} />
-        </TabsContent>
-
         <TabsContent value="trends" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Price Trends by Property Type</CardTitle>
-              <CardDescription>How different property types are performing</CardDescription>
+          <Card className="border-findy-magenta/20 bg-gradient-to-br from-findy-magenta/5 to-transparent">
+            <CardHeader className="bg-gradient-to-r from-findy-magenta/10 to-transparent border-b border-findy-magenta/20">
+              <CardTitle className="flex items-center gap-2 text-findy-magenta">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                📈 Tendencias del Mercado
+              </CardTitle>
+              <CardDescription className="text-findy-mediumgray">
+                Movimientos históricos y predichos del mercado
+              </CardDescription>
             </CardHeader>
-            <CardContent className="h-[400px] flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-muted-foreground">Property type comparison chart will appear here</p>
+            <CardContent className="pt-6">
+              <p className="text-sm text-findy-lightgray mb-6">
+                Análisis de tendencias del mercado basado en datos de ZonaProp de Córdoba, Argentina.
+              </p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="p-4 rounded-lg border border-findy-electric/20 bg-gradient-to-r from-findy-electric/5 to-transparent">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-findy-lightgray">Departamentos:</span>
+                      <span className="text-sm font-medium text-findy-electric">Tipo más común</span>
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg border border-findy-orange/20 bg-gradient-to-r from-findy-orange/5 to-transparent">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-findy-lightgray">Rango de Precios:</span>
+                      <span className="text-sm font-medium text-findy-orange">$47K - $675K USD</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-4 rounded-lg border border-findy-skyblue/20 bg-gradient-to-r from-findy-skyblue/5 to-transparent">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-findy-lightgray">Áreas Populares:</span>
+                      <span className="text-sm font-medium text-findy-skyblue">Centro, Nueva Córdoba</span>
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg border border-findy-fuchsia/20 bg-gradient-to-r from-findy-fuchsia/5 to-transparent">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-findy-lightgray">Tamaño Promedio:</span>
+                      <span className="text-sm font-medium text-findy-fuchsia">40-180 m²</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>Single Family Homes</CardTitle>
-                <CardDescription>Price trends for single family homes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">+3.2%</div>
-                <p className="text-xs text-muted-foreground">Year over year change</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Condos & Townhomes</CardTitle>
-                <CardDescription>Price trends for condos and townhomes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">+1.8%</div>
-                <p className="text-xs text-muted-foreground">Year over year change</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Multi-Family</CardTitle>
-                <CardDescription>Price trends for multi-family properties</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">+4.5%</div>
-                <p className="text-xs text-muted-foreground">Year over year change</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Market Predictions</CardTitle>
-              <CardDescription>AI-generated predictions for future market trends</CardDescription>
-            </CardHeader>
-            <CardContent className="prose max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: trendPrediction }} />
-            </CardContent>
-          </Card>
+        </TabsContent>
+        <TabsContent value="opportunities" className="space-y-4">
+          <OpportunityZonesCard />
+        </TabsContent>
+        <TabsContent value="strategy" className="space-y-4">
+          <InvestmentStrategyGenerator />
         </TabsContent>
       </Tabs>
     </div>

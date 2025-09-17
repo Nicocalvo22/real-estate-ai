@@ -1,22 +1,9 @@
 // Environment configuration for APIs and services
 export const config = {
-  // Real Estate APIs
-  zillow: {
-    apiKey: process.env.ZILLOW_API_KEY || "",
-    baseUrl: "https://api.bridgedataoutput.com/api/v2/zestimates",
-  },
-  redfin: {
-    apiKey: process.env.REDFIN_API_KEY || "",
-    baseUrl: "https://api.redfin.com/v1",
-  },
-  mls: {
-    apiKey: process.env.MLS_API_KEY || "",
-    baseUrl: "https://api.mlsgrid.com/v2",
-  },
-  repliers: {
-    apiKey: process.env.REPLIERS_API_KEY || "",
-    baseUrl: "https://api.repliers.io/v1",
-    region: process.env.REPLIERS_REGION || "us",
+  // CSV Data Configuration
+  csv: {
+    fileName: process.env.CSV_FILE_NAME || "properties.csv",
+    dataPath: process.env.CSV_DATA_PATH || "./data",
   },
 
   // AI Services
@@ -46,7 +33,7 @@ export const config = {
 
   // Feature flags
   features: {
-    useRealApis: process.env.USE_REAL_APIS === "true",
+    useCSV: true,
     enableCaching: true,
     logApiCalls: true,
   },
