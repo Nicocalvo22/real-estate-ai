@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/utils/supabase/client"
+// import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,7 +18,8 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  // TEMPORALMENTE DESHABILITADO:
+  // const supabase = createClient()
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,18 +27,25 @@ export default function LoginForm() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      // TEMPORALMENTE DESHABILITADO - Para habilitar, descomenta:
+      // const { error } = await supabase.auth.signInWithPassword({
+      //   email,
+      //   password,
+      // })
 
-      if (error) {
-        setError(error.message)
-        return
+      // if (error) {
+      //   setError(error.message)
+      //   return
+      // }
+
+      // Mock login para desarrollo
+      if (email && password) {
+        console.log('Login simulado exitoso')
+        router.push("/dashboard")
+        router.refresh()
+      } else {
+        setError("Por favor completa todos los campos")
       }
-
-      router.push("/dashboard")
-      router.refresh()
     } catch (err) {
       console.error("Sign in error:", err)
       setError("An unexpected error occurred")

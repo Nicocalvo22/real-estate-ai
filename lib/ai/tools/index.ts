@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { createClient } from "@/utils/supabase/server"
+// import { createClient } from "@/utils/supabase/server"
 import {
   fetchPropertyListings,
   fetchMarketTrends,

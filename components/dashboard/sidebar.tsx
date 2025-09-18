@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Building, Home, Search, BarChart3, Map, Heart, Settings, LogOut, AlertTriangle, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/utils/supabase/client"
+// import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 
 interface SidebarProps {
@@ -15,10 +15,13 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
+  // TEMPORALMENTE DESHABILITADO:
+  // const supabase = createClient()
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    // TEMPORALMENTE DESHABILITADO - Para habilitar, descomenta:
+    // await supabase.auth.signOut()
+    console.log("Sesión cerrada (modo demo)")
     router.push("/")
     router.refresh()
   }

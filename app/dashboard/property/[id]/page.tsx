@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { notFound } from "next/navigation"
-import { runAgent } from "@/lib/ai/agent-system"
+// import { runAgent } from "@/lib/ai/agent-system"
 import { SavePropertyButton } from "@/components/property/save-property-button"
 import { InvestmentCalculator } from "@/components/property/investment-calculator"
 import { NeighborhoodAnalysis } from "@/components/property/neighborhood-analysis"
@@ -12,62 +12,87 @@ import { CMAAnalysis } from "@/components/property/cma-analysis"
 import { InvestmentAnalysisCard } from "@/components/property/investment-analysis-card"
 
 export default async function PropertyPage({ params }: { params: { id: string } }) {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // TEMPORALMENTE DESHABILITADO - Para habilitar, descomenta:
+  // const supabase = createClient()
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser()
 
-  // Get property details
-  const { data: property } = await supabase.from("real_estate_listings").select("*").eq("id", params.id).single()
+  // // Get property details
+  // const { data: property } = await supabase.from("real_estate_listings").select("*").eq("id", params.id).single()
 
-  if (!property) {
-    notFound()
+  // if (!property) {
+  //   notFound()
+  // }
+
+  // // Check if property is saved by user
+  // const { data: savedProperty } = await supabase
+  //   .from("user_saved_listings")
+  //   .select("*")
+  //   .eq("user_id", user?.id)
+  //   .eq("listing_id", property.id)
+  //   .single()
+
+  // // Get AI analysis of the property
+  // const propertyAnalysis = await runAgent(
+  //   "deal-finder",
+  //   `Analyze this property in detail:
+  //   Address: ${property.address}, ${property.city}, ${property.state} ${property.zip_code}
+  //   Price: ${property.price}
+  //   Details: ${property.bedrooms} bedrooms, ${property.bathrooms} bathrooms, ${property.square_feet} sqft
+  //   Year Built: ${property.year_built}
+  //   Property Type: ${property.property_type}
+  //
+  //   Provide a detailed analysis of why this is a good deal, potential ROI, and any risks to consider.`,
+  // )
+
+  // // Get investment analysis
+  // const investmentAnalysis = await runAgent(
+  //   "investment-advisor",
+  //   `Provide investment analysis for this property:
+  //   Address: ${property.address}, ${property.city}, ${property.state} ${property.zip_code}
+  //   Price: ${property.price}
+  //   Details: ${property.bedrooms} bedrooms, ${property.bathrooms} bathrooms, ${property.square_feet} sqft
+  //   Year Built: ${property.year_built}
+  //   Property Type: ${property.property_type}
+  //
+  //   Calculate potential ROI, cash flow, and appreciation. Consider both short-term rental and long-term rental scenarios.`,
+  // )
+
+  // // Get neighborhood analysis
+  // const neighborhoodAnalysis = await runAgent(
+  //   "neighborhood-analyst",
+  //   `Analyze the neighborhood for this property:
+  //   City: ${property.city}
+  //   State: ${property.state}
+  //   Zip Code: ${property.zip_code}
+  //
+  //   Provide insights on schools, crime rates, amenities, and future growth potential.`,
+  // )
+
+  // Mock data para desarrollo
+  const user = { email: "demo@example.com" }
+  const property = {
+    id: params.id,
+    address: "Av. Colón 1234",
+    city: "Córdoba",
+    state: "Córdoba",
+    zip_code: "5000",
+    price: 95000,
+    bedrooms: 2,
+    bathrooms: 2,
+    square_feet: 850,
+    year_built: 2018,
+    property_type: "department",
+    listing_status: "active",
+    deal_score: 18,
+    deal_reasons: ["Precio por debajo del mercado", "Excelente ubicación", "Construcción reciente"],
+    image_url: null
   }
-
-  // Check if property is saved by user
-  const { data: savedProperty } = await supabase
-    .from("user_saved_listings")
-    .select("*")
-    .eq("user_id", user?.id)
-    .eq("listing_id", property.id)
-    .single()
-
-  // Get AI analysis of the property
-  const propertyAnalysis = await runAgent(
-    "deal-finder",
-    `Analyze this property in detail:
-    Address: ${property.address}, ${property.city}, ${property.state} ${property.zip_code}
-    Price: ${property.price}
-    Details: ${property.bedrooms} bedrooms, ${property.bathrooms} bathrooms, ${property.square_feet} sqft
-    Year Built: ${property.year_built}
-    Property Type: ${property.property_type}
-    
-    Provide a detailed analysis of why this is a good deal, potential ROI, and any risks to consider.`,
-  )
-
-  // Get investment analysis
-  const investmentAnalysis = await runAgent(
-    "investment-advisor",
-    `Provide investment analysis for this property:
-    Address: ${property.address}, ${property.city}, ${property.state} ${property.zip_code}
-    Price: ${property.price}
-    Details: ${property.bedrooms} bedrooms, ${property.bathrooms} bathrooms, ${property.square_feet} sqft
-    Year Built: ${property.year_built}
-    Property Type: ${property.property_type}
-    
-    Calculate potential ROI, cash flow, and appreciation. Consider both short-term rental and long-term rental scenarios.`,
-  )
-
-  // Get neighborhood analysis
-  const neighborhoodAnalysis = await runAgent(
-    "neighborhood-analyst",
-    `Analyze the neighborhood for this property:
-    City: ${property.city}
-    State: ${property.state}
-    Zip Code: ${property.zip_code}
-    
-    Provide insights on schools, crime rates, amenities, and future growth potential.`,
-  )
+  const savedProperty = null
+  const propertyAnalysis = "<h3>Análisis de la Propiedad</h3><p>Esta propiedad representa una excelente oportunidad de inversión debido a su ubicación estratégica en el centro de Córdoba y su precio competitivo.</p>"
+  const investmentAnalysis = "<h3>Análisis de Inversión</h3><p>Con un ROI estimado del 8.5% anual, esta propiedad ofrece un flujo de caja positivo desde el primer mes.</p>"
+  const neighborhoodAnalysis = "<h3>Análisis del Barrio</h3><p>El área cuenta con excelente conectividad, centros comerciales cercanos y alta demanda de alquiler.</p>"
 
   return (
     <div className="space-y-6">

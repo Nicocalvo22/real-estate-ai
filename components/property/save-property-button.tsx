@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/utils/supabase/client"
+// import { createClient } from "@/utils/supabase/client"
 import { Heart } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -15,37 +15,43 @@ export function SavePropertyButton({ propertyId, isSaved }: SavePropertyButtonPr
   const [saved, setSaved] = useState(isSaved)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  // TEMPORALMENTE DESHABILITADO:
+  // const supabase = createClient()
 
   const handleSaveProperty = async () => {
     setLoading(true)
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      // TEMPORALMENTE DESHABILITADO - Para habilitar, descomenta:
+      // const {
+      //   data: { user },
+      // } = await supabase.auth.getUser()
 
-      if (!user) {
-        router.push("/login")
-        return
-      }
+      // if (!user) {
+      //   router.push("/login")
+      //   return
+      // }
 
-      if (saved) {
-        // Remove from saved properties
-        await supabase.from("user_saved_listings").delete().eq("user_id", user.id).eq("listing_id", propertyId)
+      // if (saved) {
+      //   // Remove from saved properties
+      //   await supabase.from("user_saved_listings").delete().eq("user_id", user.id).eq("listing_id", propertyId)
 
-        setSaved(false)
-      } else {
-        // Add to saved properties
-        await supabase.from("user_saved_listings").insert({
-          user_id: user.id,
-          listing_id: propertyId,
-        })
+      //   setSaved(false)
+      // } else {
+      //   // Add to saved properties
+      //   await supabase.from("user_saved_listings").insert({
+      //     user_id: user.id,
+      //     listing_id: propertyId,
+      //   })
 
-        setSaved(true)
-      }
+      //   setSaved(true)
+      // }
 
-      router.refresh()
+      // router.refresh()
+
+      // Mock functionality para desarrollo
+      setSaved(!saved)
+      console.log(`Propiedad ${propertyId} ${saved ? 'removida de' : 'guardada en'} favoritos`)
     } catch (error) {
       console.error("Error saving property:", error)
     } finally {

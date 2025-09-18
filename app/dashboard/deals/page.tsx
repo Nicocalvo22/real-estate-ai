@@ -3,31 +3,69 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { runAgent } from "@/lib/ai/agent-system"
+// import { runAgent } from "@/lib/ai/agent-system"
 
 export default async function DealsPage() {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // TEMPORALMENTE DESHABILITADO - Para habilitar, descomenta:
+  // const supabase = createClient()
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser()
 
-  // Get user profile to check subscription tier
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user?.id).single()
+  // // Get user profile to check subscription tier
+  // const { data: profile } = await supabase.from("profiles").select("*").eq("id", user?.id).single()
 
-  // Get deals based on subscription tier
-  const dealLimit = profile?.subscription_tier === "premium" ? 50 : profile?.subscription_tier === "basic" ? 20 : 5
+  // // Get deals based on subscription tier
+  // const dealLimit = profile?.subscription_tier === "premium" ? 50 : profile?.subscription_tier === "basic" ? 20 : 5
 
-  const { data: deals } = await supabase
-    .from("real_estate_listings")
-    .select("*")
-    .order("deal_score", { ascending: false })
-    .limit(dealLimit)
+  // const { data: deals } = await supabase
+  //   .from("real_estate_listings")
+  //   .select("*")
+  //   .order("deal_score", { ascending: false })
+  //   .limit(dealLimit)
 
-  // Get AI analysis of top deals
-  const dealAnalysis = await runAgent(
-    "deal-finder",
-    "Analyze the current top real estate deals and explain why they represent good investment opportunities.",
-  )
+  // // Get AI analysis of top deals
+  // const dealAnalysis = await runAgent(
+  //   "deal-finder",
+  //   "Analyze the current top real estate deals and explain why they represent good investment opportunities.",
+  // )
+
+  // Mock data para desarrollo
+  const user = { email: "demo@example.com" }
+  const profile = { subscription_tier: "basic" }
+  const deals = [
+    {
+      id: "1",
+      address: "123 Deal St",
+      city: "Córdoba",
+      state: "Córdoba",
+      zip_code: "5000",
+      price: 85000,
+      bedrooms: 2,
+      bathrooms: 1,
+      square_feet: 800,
+      deal_score: 20,
+      image_url: null,
+      property_type: "residential",
+      deal_reasons: ["Below market value", "Great location"]
+    },
+    {
+      id: "2",
+      address: "456 Investment Ave",
+      city: "Córdoba",
+      state: "Córdoba",
+      zip_code: "5001",
+      price: 120000,
+      bedrooms: 3,
+      bathrooms: 2,
+      square_feet: 1200,
+      deal_score: 18,
+      image_url: null,
+      property_type: "residential",
+      deal_reasons: ["High ROI potential", "Growing area"]
+    }
+  ]
+  const dealAnalysis = "<h3>Análisis de Inversión</h3><p>Estas propiedades representan excelentes oportunidades debido a su ubicación estratégica en Córdoba y precios por debajo del mercado.</p>"
 
   return (
     <div className="space-y-6">

@@ -14,6 +14,38 @@ npm run lint      # Run ESLint
 
 **Note:** This project uses standard `npm` commands as defined in package.json.
 
+## ⚠️ IMPORTANT: Supabase Authentication Status
+
+**CURRENTLY DISABLED** - La autenticación de Supabase está temporalmente deshabilitada para desarrollo:
+
+**Server-side (Páginas):**
+- `middleware.ts` - Middleware de autenticación comentado (líneas 6-9)
+- `app/dashboard/layout.tsx` - Check de usuario comentado (líneas 13-20)
+- `app/page.tsx` - Redirect automático comentado (líneas 9-16)
+- `app/dashboard/page.tsx` - Queries a Supabase comentadas, datos mock agregados
+- `app/dashboard/deals/page.tsx` - Conexión DB comentada, datos demo agregados
+- `app/dashboard/property/[id]/page.tsx` - Análisis AI y queries comentadas, datos mock
+
+**Client-side (Componentes):**
+- `components/auth/login-form.tsx` - Login simulado sin Supabase
+- `components/auth/signup-form.tsx` - Registro simulado sin Supabase
+- `components/dashboard/sidebar.tsx` - SignOut simulado sin Supabase
+- `components/dashboard/sidebar-spanish.tsx` - SignOut simulado sin Supabase
+- `components/property/save-property-button.tsx` - Funcionalidad simulada sin DB
+- `components/dashboard/header.tsx` - Usuario mock sin conexión DB
+
+**Auth Routes:**
+- `app/login/page.tsx` - Página login sin redirects automáticos
+- `app/signup/page.tsx` - Página signup sin redirects automáticos
+- `app/auth/confirm/page.tsx` - Confirmación simulada sin verificación
+- `app/auth/signout/route.ts` - SignOut simulado sin auth
+
+**AI System:**
+- `lib/ai/agent-system.ts` - Import de Supabase comentado
+- `lib/ai/tools/index.ts` - Import de Supabase comentado
+
+Todas las rutas del dashboard son accesibles sin autenticación y sin errores de API keys. Para reactivar, descomenta las líneas marcadas con "TEMPORALMENTE DESHABILITADO".
+
 ## Architecture Overview
 
 This is an **AI-powered real estate investment platform** built with:
@@ -39,9 +71,9 @@ This is an **AI-powered real estate investment platform** built with:
 - All components use TypeScript interfaces and forwardRef pattern
 
 **Authentication & Security:**
-- **Supabase Auth** with middleware-based protection
-- Server-side session management in `middleware.ts`
-- Protected routes redirect authenticated users to `/dashboard`
+- **Supabase Auth** with middleware-based protection *(CURRENTLY DISABLED)*
+- Server-side session management in `middleware.ts` *(COMMENTED OUT)*
+- Protected routes redirect authenticated users to `/dashboard` *(DISABLED)*
 
 **Data Layer:**
 - **CSV Client** for property data from `/data/properties.csv`
@@ -59,7 +91,7 @@ The platform integrates multiple AI providers for different use cases:
 - **CMA Generation**: `/api/property/cma/` - Comparative Market Analysis
 
 Each API route follows a pattern of:
-1. Authentication check
+1. Authentication check *(CURRENTLY DISABLED)*
 2. Input validation
 3. AI provider selection based on analysis type
 4. Response formatting with consistent error handling
@@ -119,9 +151,10 @@ GOOGLE_API_KEY=
 ## Special Features
 
 **CSV Data Management:**
-- Property data is stored in `/data/properties.csv`
-- Use `reloadCSVData()` function to refresh data after CSV updates
-- CSV structure: id,address,city,state,zipCode,price,bedrooms,bathrooms,squareFeet,yearBuilt,propertyType,listingStatus,latitude,longitude,daysOnMarket,listingDate,description
+- Property data is stored in `/data/ZPAgosto.csv` (ZonaProp data from Córdoba, Argentina)
+- CSV structure: Fuente/Origen,Titulo_URL,Precio,Latitud,Longitud,Dirección,Barrio/Zona,Provincia,Tipología/Producto,google_maps,Fecha de publicación,Vendedor,m2 totales,m2 cubiertos,Dormitorios,Baños
+- Real-time CSV analysis via `/lib/csv-analyzer.ts` utility functions
+- Market statistics API at `/app/api/market/stats/route.ts`
 
 **v0.dev Integration:**
 - Project auto-syncs with v0.dev (ID: Xt5V3kIYfuz)
@@ -145,3 +178,17 @@ GOOGLE_API_KEY=
 2. Create components in `/components/dashboard/`
 3. Update navigation in dashboard layout
 4. Ensure proper authentication checks
+
+**Market Analytics Features:**
+- **Dynamic Market Trends**: `/components/analytics/market-trends-filter.tsx` provides real-time filtering by property type and neighborhood
+- **CSV Data Processing**: `/lib/csv-analyzer.ts` contains utilities for:
+  - `getMarketStats(propertyType, neighborhood)`: Calculate market statistics for filtered data
+  - `getUniqueValues()`: Extract unique neighborhoods and property types from CSV
+- **Real-time Statistics**: Market trends tab shows live data from ZPAgosto.csv with filters for:
+  - Property Types: Casa, Departamento (based on actual CSV data)
+  - Neighborhoods: 50+ actual neighborhoods from Córdoba dataset
+  - Price ranges, average sizes, and property counts calculated dynamically
+- **Opportunity Zones**: `/components/analytics/opportunity-zones-card-spanish.tsx` shows investment opportunities in Córdoba
+  - Two active tabs: "🏆 Mejores Oportunidades" and "📍 Detalles de Zonas"
+  - Investment strategy tab has been hidden for streamlined user experience
+- **Property Search**: `/app/dashboard/search/page.tsx` includes embedded Looker Studio dashboard for interactive property exploration

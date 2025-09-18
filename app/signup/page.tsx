@@ -1,18 +1,19 @@
 import SignUpForm from "@/components/auth/signup-form"
-import { createClient } from "@/utils/supabase/server"
+// import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Building } from "lucide-react"
 
 export default async function SignUpPage() {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // TEMPORALMENTE DESHABILITADO - Para habilitar, descomenta:
+  // const supabase = createClient()
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser()
 
-  if (user) {
-    redirect("/dashboard")
-  }
+  // if (user) {
+  //   redirect("/dashboard")
+  // }
 
   return (
     <div className="flex min-h-screen flex-col">

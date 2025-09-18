@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/utils/supabase/client"
+// import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,7 +20,8 @@ export default function SignUpForm() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+  // TEMPORALMENTE DESHABILITADO:
+  // const supabase = createClient()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,36 +30,46 @@ export default function SignUpForm() {
     setMessage(null)
 
     try {
-      const { error: signUpError, data } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      })
+      // TEMPORALMENTE DESHABILITADO - Para habilitar, descomenta:
+      // const { error: signUpError, data } = await supabase.auth.signUp({
+      //   email,
+      //   password,
+      //   options: {
+      //     data: {
+      //       full_name: fullName,
+      //     },
+      //   },
+      // })
 
-      if (signUpError) {
-        setError(signUpError.message)
-        return
+      // if (signUpError) {
+      //   setError(signUpError.message)
+      //   return
+      // }
+
+      // // Create profile entry
+      // if (data?.user) {
+      //   const { error: profileError } = await supabase.from("profiles").insert({
+      //     id: data.user.id,
+      //     full_name: fullName,
+      //     subscription_tier: "free",
+      //     subscription_status: "active",
+      //   })
+
+      //   if (profileError) {
+      //     console.error("Error creating profile:", profileError)
+      //   }
+      // }
+
+      // Mock signup para desarrollo
+      if (fullName && email && password.length >= 8) {
+        console.log('Registro simulado exitoso:', { fullName, email })
+        setMessage("¡Cuenta creada exitosamente! Puedes iniciar sesión.")
+        setTimeout(() => {
+          router.push("/login")
+        }, 2000)
+      } else {
+        setError("Por favor completa todos los campos y usa una contraseña de al menos 8 caracteres")
       }
-
-      // Create profile entry
-      if (data?.user) {
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: data.user.id,
-          full_name: fullName,
-          subscription_tier: "free",
-          subscription_status: "active",
-        })
-
-        if (profileError) {
-          console.error("Error creating profile:", profileError)
-        }
-      }
-
-      setMessage("Check your email for the confirmation link")
     } catch (err) {
       console.error("Sign up error:", err)
       setError("An unexpected error occurred")

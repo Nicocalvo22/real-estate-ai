@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server"
+// import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building } from "lucide-react"
@@ -9,19 +9,26 @@ export default async function ConfirmPage({
 }: {
   searchParams: { token_hash?: string; type?: string }
 }) {
-  const supabase = createClient()
+  // TEMPORALMENTE DESHABILITADO - Para habilitar, descomenta:
+  // const supabase = createClient()
 
+  // const { token_hash, type } = searchParams
+
+  // if (token_hash && type) {
+  //   const { error } = await supabase.auth.verifyOtp({
+  //     token_hash,
+  //     type: type as any,
+  //   })
+
+  //   if (!error) {
+  //     redirect("/dashboard")
+  //   }
+  // }
+
+  // Mock functionality - redirect to dashboard
   const { token_hash, type } = searchParams
-
   if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({
-      token_hash,
-      type: type as any,
-    })
-
-    if (!error) {
-      redirect("/dashboard")
-    }
+    redirect("/dashboard")
   }
 
   return (

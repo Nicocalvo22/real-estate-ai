@@ -6,26 +6,60 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 export default async function DashboardPage() {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // TEMPORALMENTE DESHABILITADO - Para habilitar, descomenta:
+  // const supabase = createClient()
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user?.id).single()
+  // const { data: profile } = await supabase.from("profiles").select("*").eq("id", user?.id).single()
 
-  // Get latest deals
-  const { data: latestDeals } = await supabase
-    .from("real_estate_listings")
-    .select("*")
-    .order("deal_score", { ascending: false })
-    .limit(5)
+  // // Get latest deals
+  // const { data: latestDeals } = await supabase
+  //   .from("real_estate_listings")
+  //   .select("*")
+  //   .order("deal_score", { ascending: false })
+  //   .limit(5)
 
-  // Get saved properties
-  const { data: savedProperties } = await supabase
-    .from("user_saved_listings")
-    .select("*, real_estate_listings(*)")
-    .eq("user_id", user?.id)
-    .limit(5)
+  // // Get saved properties
+  // const { data: savedProperties } = await supabase
+  //   .from("user_saved_listings")
+  //   .select("*, real_estate_listings(*)")
+  //   .eq("user_id", user?.id)
+  //   .limit(5)
+
+  // Mock data para desarrollo
+  const user = { email: "demo@example.com" }
+  const profile = { full_name: "Usuario Demo" }
+  const latestDeals = [
+    {
+      id: "1",
+      address: "123 Main St",
+      city: "San Francisco",
+      state: "CA",
+      zip_code: "94102",
+      price: 750000,
+      bedrooms: 3,
+      bathrooms: 2,
+      square_feet: 1200,
+      deal_score: 15,
+      image_url: null
+    },
+    {
+      id: "2",
+      address: "456 Oak Ave",
+      city: "Los Angeles",
+      state: "CA",
+      zip_code: "90210",
+      price: 650000,
+      bedrooms: 2,
+      bathrooms: 2,
+      square_feet: 1000,
+      deal_score: 12,
+      image_url: null
+    }
+  ]
+  const savedProperties = []
 
   return (
     <div className="space-y-6">

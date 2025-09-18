@@ -70,7 +70,7 @@ export function OpportunityZonesCard() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-800 border border-findy-orange/20">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-800 border border-findy-orange/20">
             <TabsTrigger
               value="overview"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-findy-orange/20 data-[state=active]:to-findy-orange/10 data-[state=active]:text-findy-orange data-[state=active]:border-findy-orange/30 hover:bg-findy-orange/5 text-findy-lightgray"
@@ -82,12 +82,6 @@ export function OpportunityZonesCard() {
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-findy-skyblue/20 data-[state=active]:to-findy-skyblue/10 data-[state=active]:text-findy-skyblue data-[state=active]:border-findy-skyblue/30 hover:bg-findy-skyblue/5 text-findy-lightgray"
             >
               📍 Detalles de Zonas
-            </TabsTrigger>
-            <TabsTrigger
-              value="strategy"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-findy-fuchsia/20 data-[state=active]:to-findy-fuchsia/10 data-[state=active]:text-findy-fuchsia data-[state=active]:border-findy-fuchsia/30 hover:bg-findy-fuchsia/5 text-findy-lightgray"
-            >
-              🚀 Estrategia de Inversión
             </TabsTrigger>
           </TabsList>
 
@@ -298,80 +292,6 @@ export function OpportunityZonesCard() {
             </div>
           </TabsContent>
 
-          <TabsContent value="strategy" className="space-y-4">
-            <div className="space-y-4">
-              <div className="rounded-lg border border-findy-fuchsia/20 bg-gradient-to-r from-findy-fuchsia/5 to-transparent p-4">
-                <h3 className="font-medium text-findy-fuchsia">🎯 Estrategia a Corto Plazo (6-12 meses)</h3>
-                <p className="mt-2 text-sm text-findy-lightgray">
-                  Enfocarse en propiedades en Nueva Córdoba con potencial de flujo de caja inmediato. Apuntar a
-                  departamentos con precios por debajo del mercado que requieran renovaciones mínimas. La fuerte
-                  demanda de alquiler (92/100) sugiere colocación rápida de inquilinos e ingresos estables.
-                </p>
-                <div className="mt-3">
-                  <h4 className="text-sm font-medium text-findy-fuchsia">Pasos de Acción:</h4>
-                  <ol className="mt-1 space-y-1 pl-5 text-sm text-findy-lightgray">
-                    <li className="list-decimal">
-                      Configurar alertas de propiedades para departamentos en Nueva Córdoba
-                    </li>
-                    <li className="list-decimal">
-                      Enfocarse en propiedades con precios 5-10% por debajo del mercado en buenas condiciones
-                    </li>
-                    <li className="list-decimal">
-                      Preparar opciones de financiamiento enfocadas en maximizar flujo de caja
-                    </li>
-                    <li className="list-decimal">Construir relaciones con administradores de propiedades en la zona</li>
-                  </ol>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-findy-electric/20 bg-gradient-to-r from-findy-electric/5 to-transparent p-4">
-                <h3 className="font-medium text-findy-electric">⚡ Estrategia a Mediano Plazo (1-3 años)</h3>
-                <p className="mt-2 text-sm text-findy-lightgray">
-                  Expandir cartera para incluir propiedades en Centro y Villa Allende con potencial de valor agregado.
-                  Las tendencias de apreciación del 8-15% indican buen potencial de crecimiento de capital.
-                  Considerar propiedades que puedan beneficiarse de mejoras estratégicas.
-                </p>
-                <div className="mt-3">
-                  <h4 className="text-sm font-medium text-findy-electric">Pasos de Acción:</h4>
-                  <ol className="mt-1 space-y-1 pl-5 text-sm text-findy-lightgray">
-                    <li className="list-decimal">
-                      Identificar propiedades con potencial de renovación para forzar apreciación
-                    </li>
-                    <li className="list-decimal">Desarrollar relaciones con contratistas y especialistas en renovación</li>
-                    <li className="list-decimal">
-                      Considerar refinanciamiento de propiedades iniciales para extraer capital para nuevas adquisiciones
-                    </li>
-                    <li className="list-decimal">
-                      Monitorear proyectos de desarrollo que puedan impactar valores de propiedades
-                    </li>
-                  </ol>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-findy-skyblue/20 bg-gradient-to-r from-findy-skyblue/5 to-transparent p-4">
-                <h3 className="font-medium text-findy-skyblue">🚀 Estrategia a Largo Plazo (3-5+ años)</h3>
-                <p className="mt-2 text-sm text-findy-lightgray">
-                  Posicionar cartera para máxima apreciación adquiriendo propiedades en barrios emergentes antes
-                  de que se completen proyectos de desarrollo importantes. Considerar propiedades multifamiliares
-                  o comerciales más grandes para diversificación de cartera.
-                </p>
-                <div className="mt-3">
-                  <h4 className="text-sm font-medium text-findy-skyblue">Pasos de Acción:</h4>
-                  <ol className="mt-1 space-y-1 pl-5 text-sm text-findy-lightgray">
-                    <li className="list-decimal">
-                      Investigar próximos proyectos de infraestructura y desarrollo en la región
-                    </li>
-                    <li className="list-decimal">
-                      Explorar oportunidades de propiedades comerciales conforme crezca la cartera
-                    </li>
-                    <li className="list-decimal">
-                      Desarrollar estrategias de salida para cada propiedad basadas en la posición del ciclo de mercado
-                    </li>
-                  </ol>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>

@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { runAgent } from "@/lib/ai/agent-system-simple"
 import { MarketInsightsCard } from "@/components/analytics/market-insights-card"
+import { MarketTrendsFilter } from "@/components/analytics/market-trends-filter"
 import { OpportunityZonesCard } from "@/components/analytics/opportunity-zones-card-spanish"
 import { InvestmentStrategyGenerator } from "@/components/analytics/investment-strategy-generator-spanish"
 
@@ -213,54 +214,7 @@ Factores de Riesgo:
           </div>
         </TabsContent>
         <TabsContent value="trends" className="space-y-4">
-          <Card className="border-findy-magenta/20 bg-gradient-to-br from-findy-magenta/5 to-transparent">
-            <CardHeader className="bg-gradient-to-r from-findy-magenta/10 to-transparent border-b border-findy-magenta/20">
-              <CardTitle className="flex items-center gap-2 text-findy-magenta">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-                📈 Tendencias del Mercado
-              </CardTitle>
-              <CardDescription className="text-findy-mediumgray">
-                Movimientos históricos y predichos del mercado
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <p className="text-sm text-findy-lightgray mb-6">
-                Análisis de tendencias del mercado basado en datos de ZonaProp de Córdoba, Argentina.
-              </p>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div className="p-4 rounded-lg border border-findy-electric/20 bg-gradient-to-r from-findy-electric/5 to-transparent">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-findy-lightgray">Departamentos:</span>
-                      <span className="text-sm font-medium text-findy-electric">Tipo más común</span>
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-lg border border-findy-orange/20 bg-gradient-to-r from-findy-orange/5 to-transparent">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-findy-lightgray">Rango de Precios:</span>
-                      <span className="text-sm font-medium text-findy-orange">$47K - $675K USD</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="p-4 rounded-lg border border-findy-skyblue/20 bg-gradient-to-r from-findy-skyblue/5 to-transparent">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-findy-lightgray">Áreas Populares:</span>
-                      <span className="text-sm font-medium text-findy-skyblue">Centro, Nueva Córdoba</span>
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-lg border border-findy-fuchsia/20 bg-gradient-to-r from-findy-fuchsia/5 to-transparent">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-findy-lightgray">Tamaño Promedio:</span>
-                      <span className="text-sm font-medium text-findy-fuchsia">40-180 m²</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MarketTrendsFilter />
         </TabsContent>
         <TabsContent value="opportunities" className="space-y-4">
           <OpportunityZonesCard />

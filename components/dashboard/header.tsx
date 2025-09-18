@@ -8,16 +8,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { createClient } from "@/utils/supabase/server"
+// import { createClient } from "@/utils/supabase/server"
 import Link from "next/link"
 
 export async function Header() {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // TEMPORALMENTE DESHABILITADO - Para habilitar, descomenta:
+  // const supabase = createClient()
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user?.id).single()
+  // const { data: profile } = await supabase.from("profiles").select("*").eq("id", user?.id).single()
+
+  // Mock data para desarrollo
+  const user = { email: "demo@example.com" }
+  const profile = { full_name: "Usuario Demo", subscription_tier: "basic" }
 
   return (
     <header className="flex h-16 items-center px-4 border-b">
