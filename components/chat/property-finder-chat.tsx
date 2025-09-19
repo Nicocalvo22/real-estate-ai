@@ -120,6 +120,31 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
     })
   }
 
+  const renderMessageWithLinks = (content: string) => {
+    // Expresión regular para detectar URLs (http, https, www)
+    const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g
+    const parts = content.split(urlRegex)
+
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        // Si es una URL, crear un enlace clickeable
+        const href = part.startsWith('http') ? part : `https://${part}`
+        return (
+          <a
+            key={index}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-findy-electric hover:text-findy-skyblue underline underline-offset-2 transition-colors duration-200 font-medium"
+          >
+            {part}
+          </a>
+        )
+      }
+      return part
+    })
+  }
+
   return (
     <div className="space-y-4">
       {/* Quick Filters */}
@@ -192,7 +217,7 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
                         : "bg-gradient-to-r from-findy-fuchsia/10 to-findy-magenta/10 border border-findy-fuchsia/20"
                     }`}>
                       <div className="whitespace-pre-wrap text-sm">
-                        {message.content}
+                        {renderMessageWithLinks(message.content)}
                       </div>
                       <div className="text-xs opacity-70 mt-1">
                         {formatTimestamp(message.timestamp)}

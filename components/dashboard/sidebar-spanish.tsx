@@ -37,12 +37,15 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
         <div className="px-3">
           <div className="space-y-1">
+            {/* TEMPORALMENTE OCULTO - Panel de Control
             <Link href="/dashboard">
               <Button variant={pathname === "/dashboard" ? "secondary" : "ghost"} className="w-full justify-start">
                 <Home className="mr-2 h-4 w-4" />
                 Panel de Control
               </Button>
             </Link>
+            */}
+            {/* TEMPORALMENTE OCULTO - Alertas de Ofertas
             <Link href="/dashboard/deals">
               <Button
                 variant={pathname === "/dashboard/deals" ? "secondary" : "ghost"}
@@ -52,6 +55,7 @@ export function Sidebar({ className }: SidebarProps) {
                 Alertas de Ofertas
               </Button>
             </Link>
+            */}
             <Link href="/dashboard/search">
               <Button
                 variant={pathname === "/dashboard/search" ? "secondary" : "ghost"}
@@ -79,12 +83,15 @@ export function Sidebar({ className }: SidebarProps) {
                 Findy AI
               </Button>
             </Link>
+            {/* TEMPORALMENTE OCULTO - Mapa del Mercado
             <Link href="/dashboard/map">
               <Button variant={pathname === "/dashboard/map" ? "secondary" : "ghost"} className="w-full justify-start">
                 <Map className="mr-2 h-4 w-4" />
                 Mapa del Mercado
               </Button>
             </Link>
+            */}
+            {/* TEMPORALMENTE OCULTO - Propiedades Guardadas
             <Link href="/dashboard/saved">
               <Button
                 variant={pathname === "/dashboard/saved" ? "secondary" : "ghost"}
@@ -94,6 +101,7 @@ export function Sidebar({ className }: SidebarProps) {
                 Propiedades Guardadas
               </Button>
             </Link>
+            */}
           </div>
         </div>
         <div className="px-3 py-2">
