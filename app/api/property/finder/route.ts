@@ -137,7 +137,7 @@ Todas las propiedades están disponibles y verificadas. ¿Te interesa informaci�
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, context } = await request.json()
+    const { message, context, conversationHistory } = await request.json()
 
     if (!message) {
       return NextResponse.json(
@@ -147,9 +147,27 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Build conversation context to detect if report was previously requested
+      let conversationContext = context || ''
+
+      // If we have conversation history, check for previous report requests
+      if (conversationHistory && Array.isArray(conversationHistory)) {
+        const hasReportRequest = conversationHistory.some((msg: any) =>
+          msg.role === 'user' && msg.content &&
+          msg.content.toLowerCase().includes('reporte') ||
+          msg.content.toLowerCase().includes('informe') ||
+          msg.content.toLowerCase().includes('generar') ||
+          msg.content.toLowerCase().includes('genera')
+        )
+
+        if (hasReportRequest) {
+          conversationContext += ' Usuario previamente solicitó generar reporte.'
+        }
+      }
+
       // First try using CSV-based smart search
       console.log("Using CSV-based Property Finder for response")
-      const csvResponse = generatePropertyFinderResponse(message)
+      const csvResponse = generatePropertyFinderResponse(message, conversationContext, conversationHistory)
 
       return NextResponse.json({
         response: csvResponse,
