@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 // import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -141,9 +142,9 @@ export default function SignUpForm() {
         </form>
       </CardContent>
       <CardFooter className="flex justify-center">
-        <Button variant="link" onClick={() => router.push("/login")}>
+        <Link href="/login" className="text-sm text-primary hover:underline">
           Already have an account? Sign in
-        </Button>
+        </Link>
       </CardFooter>
     </Card>
   )

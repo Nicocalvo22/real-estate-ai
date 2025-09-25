@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Building, Home, Search, BarChart3, Map, Heart, Settings, LogOut, AlertTriangle, MessageSquare, ClipboardList } from "lucide-react"
+import { Building, Home, Search, BarChart3, Map, Heart, Settings, LogOut, AlertTriangle, MessageSquare, ClipboardList, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 // import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
@@ -81,6 +81,15 @@ export function Sidebar({ className }: SidebarProps) {
               >
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Findy AI
+              </Button>
+            </Link>
+            <Link href="/dashboard/ai-contenidos">
+              <Button
+                variant={pathname === "/dashboard/ai-contenidos" ? "secondary" : "ghost"}
+                className="w-full justify-start"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                AI Contenidos
               </Button>
             </Link>
             {/* TEMPORALMENTE OCULTO - Mapa del Mercado
