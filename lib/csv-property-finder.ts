@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { parse } from 'csv-parse/sync'
+import { config } from './config'
 
 export interface Property {
   id: string
@@ -32,6 +33,13 @@ export interface SearchCriteria {
   banosMin?: number
   m2Min?: number
   m2Max?: number
+}
+
+export interface CriteriaModification {
+  action: 'add' | 'remove' | 'change'
+  field: keyof SearchCriteria
+  value?: any
+  originalQuery?: string
 }
 
 let cachedProperties: Property[] | null = null
@@ -412,14 +420,111 @@ export function findPropertiesByQuery(query: string): Property[] {
   return searchProperties(criteria)
 }
 
+// Enhanced property search that can use predefined criteria
+export function searchPropertiesWithCriteria(criteria: SearchCriteria): Property[] {
+  return searchProperties(criteria)
+}
+
+// Enhanced version that combines query parsing with previous criteria
+export function findPropertiesByQueryWithContext(query: string, previousCriteria?: SearchCriteria): {
+  properties: Property[],
+  usedCriteria: SearchCriteria,
+  isModification: boolean
+} {
+  if (!previousCriteria) {
+    // No previous criteria, use normal search
+    const properties = findPropertiesByQuery(query)
+    const usedCriteria = extractCriteriaFromQuery(query)
+    return { properties, usedCriteria, isModification: false }
+  }
+
+  // Check if this is a modification request
+  const lowerQuery = query.toLowerCase().trim()
+
+  const modificationKeywords = [
+    'cambiar', 'cambia', 'quitar', 'quita', 'sin', 'agregar', 'agrega', 'añadir', 'añade',
+    'también', 'tambien', 'pero', 'ahora', 'mejor', 'en lugar de', 'en vez de',
+    'más', 'menos', 'otro', 'otra', 'diferente', 'distinto'
+  ]
+
+  const modificationPatterns = [
+    /pero (en|de) (.+)/i,
+    /ahora (en|de) (.+)/i,
+    /mejor (.+)/i,
+    /sin (.+)/i,
+    /quita (.+)/i,
+    /cambia (.+)/i,
+  ]
+
+  const hasModificationIntent = modificationKeywords.some(keyword => lowerQuery.includes(keyword)) ||
+                               modificationPatterns.some(pattern => pattern.test(lowerQuery))
+
+  if (hasModificationIntent) {
+    console.log(`🔄 Processing modification request: "${query}"`)
+
+    // Start with previous criteria
+    const modifiedCriteria = { ...previousCriteria }
+
+    // Extract new criteria from current query
+    const newCriteria = extractCriteriaFromQuery(query)
+
+    // Apply modifications
+    Object.keys(newCriteria).forEach(key => {
+      const criteriaKey = key as keyof SearchCriteria
+      if (newCriteria[criteriaKey] !== undefined) {
+        modifiedCriteria[criteriaKey] = newCriteria[criteriaKey]
+      }
+    })
+
+    // Handle removal patterns
+    if (lowerQuery.includes('sin departamento') || lowerQuery.includes('quita departamento')) {
+      delete modifiedCriteria.tipologia
+    }
+    if (lowerQuery.includes('sin casa') || lowerQuery.includes('quita casa')) {
+      delete modifiedCriteria.tipologia
+    }
+    if (lowerQuery.includes('sin barrio') || lowerQuery.includes('quita barrio')) {
+      delete modifiedCriteria.barrio
+    }
+    if (lowerQuery.includes('sin precio') || lowerQuery.includes('quita precio')) {
+      delete modifiedCriteria.precioMin
+      delete modifiedCriteria.precioMax
+    }
+
+    const properties = searchProperties(modifiedCriteria)
+    console.log(`🔄 Modified search completed with criteria:`, modifiedCriteria)
+
+    return { properties, usedCriteria: modifiedCriteria, isModification: true }
+  }
+
+  // Not a modification, treat as new search
+  const properties = findPropertiesByQuery(query)
+  const usedCriteria = extractCriteriaFromQuery(query)
+  return { properties, usedCriteria, isModification: false }
+}
+
 export function formatPropertyForDisplay(property: Property, index: number): string {
   const formatPrice = (price: number) => `$${price.toLocaleString()} USD`
   const formatM2 = (m2: number) => `${m2} m²`
+  const formatDate = (date: string) => {
+    try {
+      return new Date(date).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })
+    } catch {
+      return date
+    }
+  }
 
-  return `${index + 1}. **${property.tipologia} ${property.dormitorios} ambientes** - ${property.direccion}
-   • Precio: ${formatPrice(property.precio)} • ${formatM2(property.m2_totales)} • ${property.dormitorios} dorm, ${property.banos} baño${property.banos !== 1 ? 's' : ''}
-   • Barrio: ${property.barrio} • Estado: Disponible • Vendedor: ${property.vendedor}
-   • 🔗 Ver propiedad: ${property.titulo_url || 'URL no disponible'}`
+  return `${index + 1}. **${property.tipologia}** - ${property.direccion}
+   • **Precio:** ${formatPrice(property.precio)}
+   • **Superficie:** ${formatM2(property.m2_totales)} totales${property.m2_cubiertos ? ` (${formatM2(property.m2_cubiertos)} cubiertos)` : ''}
+   • **Ambientes:** ${property.dormitorios} dormitorio${property.dormitorios !== 1 ? 's' : ''}, ${property.banos} baño${property.banos !== 1 ? 's' : ''}
+   • **Ubicación:** ${property.direccion}, ${property.barrio}, ${property.provincia}
+   • **Coordenadas:** Lat: ${property.latitud}, Lng: ${property.longitud}
+   • **Fuente:** ${property.fuente}
+   • **Vendedor:** ${property.vendedor}
+   • **Fecha de Publicación:** ${formatDate(property.fecha_publicacion)}
+   • **Google Maps:** ${property.google_maps || 'No disponible'}
+   • **🔗 Ver en ZonaProp:** ${property.titulo_url || 'URL no disponible'}`
 }
 
 function isConversationalMessage(query: string): boolean {
@@ -624,23 +729,375 @@ function formatAppliedFilters(query: string): string {
   return filters.length > 0 ? `**🔍 FILTROS APLICADOS:**\n${filters.join(' • ')}\n\n` : ''
 }
 
-export function generatePropertyFinderResponse(query: string): string {
+// Helper function to format filters from SearchCriteria object
+function formatAppliedFiltersFromCriteria(criteria: SearchCriteria): string {
+  let filters: string[] = []
+
+  // Barrio
+  if (criteria.barrio) {
+    const displayName = criteria.barrio.charAt(0).toUpperCase() + criteria.barrio.slice(1)
+    filters.push(`📍 Barrio: ${displayName}`)
+  }
+
+  // Property type
+  if (criteria.tipologia) {
+    const typeDisplay = criteria.tipologia === 'departamento' ? '🏢 Tipo: Departamento' :
+                        criteria.tipologia === 'casa' ? '🏠 Tipo: Casa' :
+                        criteria.tipologia === 'ph' ? '🏘️ Tipo: PH/Duplex' :
+                        `🏠 Tipo: ${criteria.tipologia}`
+    filters.push(typeDisplay)
+  }
+
+  // Bedrooms
+  if (criteria.dormitoriosMin && criteria.dormitoriosMax) {
+    if (criteria.dormitoriosMin === criteria.dormitoriosMax) {
+      filters.push(`🛏️ Dormitorios: ${criteria.dormitoriosMin}`)
+    } else {
+      filters.push(`🛏️ Dormitorios: ${criteria.dormitoriosMin} a ${criteria.dormitoriosMax}`)
+    }
+  } else if (criteria.dormitoriosMin) {
+    filters.push(`🛏️ Dormitorios: desde ${criteria.dormitoriosMin}`)
+  } else if (criteria.dormitoriosMax) {
+    filters.push(`🛏️ Dormitorios: hasta ${criteria.dormitoriosMax}`)
+  }
+
+  // Bathrooms
+  if (criteria.banosMin) {
+    filters.push(`🚿 Baños: ${criteria.banosMin}+`)
+  }
+
+  // Square meters
+  if (criteria.m2Min && criteria.m2Max) {
+    filters.push(`📐 Superficie: ${criteria.m2Min} - ${criteria.m2Max} m²`)
+  } else if (criteria.m2Min) {
+    filters.push(`📐 Superficie: desde ${criteria.m2Min} m²`)
+  } else if (criteria.m2Max) {
+    filters.push(`📐 Superficie: hasta ${criteria.m2Max} m²`)
+  }
+
+  // Price
+  if (criteria.precioMin && criteria.precioMax) {
+    filters.push(`💰 Precio: $${criteria.precioMin.toLocaleString()} - $${criteria.precioMax.toLocaleString()} USD`)
+  } else if (criteria.precioMin) {
+    filters.push(`💰 Precio: desde $${criteria.precioMin.toLocaleString()} USD`)
+  } else if (criteria.precioMax) {
+    filters.push(`💰 Precio: hasta $${criteria.precioMax.toLocaleString()} USD`)
+  }
+
+  return filters.length > 0 ? `**🔍 FILTROS APLICADOS:**\n${filters.join(' • ')}\n\n` : ''
+}
+
+// Function to extract previous search criteria from conversation history
+function extractPreviousCriteria(conversationHistory: any[]): SearchCriteria | null {
+  if (!conversationHistory || conversationHistory.length === 0) return null
+
+  // Find the last user search query (not report/selection related)
+  let lastSearchQuery = ''
+  for (let i = conversationHistory.length - 1; i >= 0; i--) {
+    const msg = conversationHistory[i]
+    if (msg.role === 'user' && msg.content) {
+      const content = msg.content.toLowerCase()
+      // Skip if it's report-related, selection, or confirmation
+      if (!content.includes('reporte') && !content.includes('informe') &&
+          !content.includes('generar') && !content.includes('confirmo') &&
+          !content.includes('selecciono') && !content.includes('elijo') &&
+          !content.match(/^\d+[\s,]*\d+/) && // Skip number selections
+          !content.includes('gracias') && !content.includes('hola')) {
+        lastSearchQuery = msg.content
+        break
+      }
+    }
+  }
+
+  if (!lastSearchQuery) return null
+
+  // Extract criteria from the last search query
+  const criteria = extractCriteriaFromQuery(lastSearchQuery)
+  console.log(`📋 Previous criteria extracted from: "${lastSearchQuery}"`, criteria)
+
+  return criteria
+}
+
+// Function to extract criteria from a query string (similar to findPropertiesByQuery logic)
+function extractCriteriaFromQuery(query: string): SearchCriteria {
+  const lowerQuery = query.toLowerCase()
+  const criteria: SearchCriteria = {}
+
+  // Extract neighborhood
+  const neighborhoods = [
+    'nueva córdoba', 'nueva cordoba', 'centro', 'villa allende', 'güemes', 'guemes',
+    'alberdi', 'arguello', 'cerro de las rosas', 'villa belgrano', 'barrio jardín',
+    'alto verde', 'villa carlos paz', 'villa dolores', 'la falda', 'barrio jardin',
+    'general paz', 'san vicente', 'cofico', 'maipu', 'maipú', 'observatorio',
+    'yofre', 'la france', 'parque chacabuco', 'las flores', 'docta', 'ciudad docta'
+  ]
+
+  for (const neighborhood of neighborhoods) {
+    if (lowerQuery.includes(neighborhood.toLowerCase())) {
+      criteria.barrio = neighborhood === 'nueva cordoba' ? 'nueva córdoba' : neighborhood
+      break
+    }
+  }
+
+  // Extract property type
+  if (lowerQuery.includes('departamento') || lowerQuery.includes('depto')) {
+    criteria.tipologia = 'departamento'
+  } else if (lowerQuery.includes('casa')) {
+    criteria.tipologia = 'casa'
+  } else if (lowerQuery.includes('ph') || lowerQuery.includes('duplex')) {
+    criteria.tipologia = 'ph'
+  }
+
+  // Extract bedrooms
+  const dormMatches = lowerQuery.match(/(\d+)\s*(dormitorios?|habitaciones?|dorm|amb)/i)
+  if (dormMatches) {
+    const numDorm = parseInt(dormMatches[1])
+    if (lowerQuery.includes('hasta')) {
+      criteria.dormitoriosMax = numDorm
+    } else if (lowerQuery.includes('desde')) {
+      criteria.dormitoriosMin = numDorm
+    } else {
+      criteria.dormitoriosMin = numDorm
+      criteria.dormitoriosMax = numDorm
+    }
+  }
+
+  // Extract range like "2 a 3 dormitorios"
+  const rangeMatch = lowerQuery.match(/(\d+)\s*a\s*(\d+)\s*(dormitorios?|habitaciones?|dorm)/i)
+  if (rangeMatch) {
+    criteria.dormitoriosMin = parseInt(rangeMatch[1])
+    criteria.dormitoriosMax = parseInt(rangeMatch[2])
+  }
+
+  // Extract bathrooms
+  const banosMatches = lowerQuery.match(/(\d+)\s*(baños?|banos?)/i)
+  if (banosMatches) {
+    criteria.banosMin = parseInt(banosMatches[1])
+  }
+
+  // Extract prices (similar logic to original)
+  if (!lowerQuery.match(/\d+\s*(?:m2|metros?|metro)/i)) {
+    const pricePatterns = [
+      /(\d+(?:,\d+)*)\s*(?:k|mil|thousand)\s*(?:usd|dolares|dolar)/gi,
+      /\$\s*(\d+(?:,\d+)*)\s*(?:k|mil|thousand|usd)?/gi,
+      /(?:precio|presupuesto|costo)\s+(?:\$|usd)?\s*(\d+(?:,\d+)*)/gi,
+    ]
+
+    for (const pattern of pricePatterns) {
+      const match = pattern.exec(lowerQuery)
+      if (match) {
+        let price = parseInt(match[1].replace(/,/g, ''))
+        if (match[0].toLowerCase().includes('k') || match[0].toLowerCase().includes('mil')) {
+          price *= 1000
+        }
+
+        if (lowerQuery.includes('hasta') || lowerQuery.includes('máximo')) {
+          criteria.precioMax = price
+        } else if (lowerQuery.includes('desde') || lowerQuery.includes('mínimo')) {
+          criteria.precioMin = price
+        } else {
+          criteria.precioMax = price
+        }
+        break
+      }
+    }
+  }
+
+  return criteria
+}
+
+// Function to detect if query is a modification to previous criteria
+async function detectCriteriaModification(query: string, previousCriteria: SearchCriteria): Promise<{
+  isModification: boolean,
+  modifiedCriteria: SearchCriteria
+}> {
+  const lowerQuery = query.toLowerCase().trim()
+
+  // Modification keywords
+  const modificationKeywords = [
+    'cambiar', 'cambia', 'quitar', 'quita', 'sin', 'agregar', 'agrega', 'añadir', 'añade',
+    'también', 'tambien', 'pero', 'ahora', 'mejor', 'en lugar de', 'en vez de',
+    'más', 'menos', 'otro', 'otra', 'diferente', 'distinto'
+  ]
+
+  const hasModificationIntent = modificationKeywords.some(keyword => lowerQuery.includes(keyword))
+
+  // Also check for specific modification patterns
+  const modificationPatterns = [
+    /pero (en|de) (.+)/i,  // "pero en Villa Allende"
+    /ahora (en|de) (.+)/i, // "ahora en Centro"
+    /mejor (.+)/i,         // "mejor hasta 80K"
+    /sin (.+)/i,           // "sin departamentos"
+    /quita (.+)/i,         // "quita Nueva Córdoba"
+    /cambia (.+)/i,        // "cambia el barrio"
+  ]
+
+  const hasModificationPattern = modificationPatterns.some(pattern => pattern.test(lowerQuery))
+
+  if (!hasModificationIntent && !hasModificationPattern) {
+    return { isModification: false, modifiedCriteria: extractCriteriaFromQuery(query) }
+  }
+
+  console.log(`🔄 Detected modification request: "${query}"`)
+
+  // Start with previous criteria
+  const modifiedCriteria = { ...previousCriteria }
+
+  // Extract new criteria from current query
+  const newCriteria = extractCriteriaFromQuery(query)
+
+  // Apply modifications
+  Object.keys(newCriteria).forEach(key => {
+    const criteriaKey = key as keyof SearchCriteria
+    if (newCriteria[criteriaKey] !== undefined) {
+      modifiedCriteria[criteriaKey] = newCriteria[criteriaKey]
+    }
+  })
+
+  // Handle removal patterns
+  if (lowerQuery.includes('sin departamento') || lowerQuery.includes('quita departamento')) {
+    delete modifiedCriteria.tipologia
+  }
+  if (lowerQuery.includes('sin casa') || lowerQuery.includes('quita casa')) {
+    delete modifiedCriteria.tipologia
+  }
+  if (lowerQuery.includes('sin barrio') || lowerQuery.includes('quita barrio')) {
+    delete modifiedCriteria.barrio
+  }
+
+  console.log(`🔄 Modified criteria:`, modifiedCriteria)
+
+  return { isModification: true, modifiedCriteria }
+}
+
+// Simplified system - only property search and UI-based actions
+
+// UI-based system functions
+function generateWorkPlanResponse(propertyNumbers: number[]): string {
+  return `🎯 **¡Perfecto!** Has creado un Plan de Trabajo con las ${propertyNumbers.length} propiedades seleccionadas: **${propertyNumbers.join(', ')}**.
+
+📋 **Tu Plan de Trabajo será una herramienta organizativa que incluirá:**
+• ✅ Lista de tareas para cada propiedad
+• ✅ Calendario de visitas y citas
+• ✅ Recordatorios de seguimiento
+• ✅ Notas y observaciones personales
+• ✅ Estado de cada evaluación
+• ✅ Checklist de documentación necesaria
+• ✅ Timeline personalizado de decisiones
+
+⏳ **Estado:** Plan creado exitosamente.
+
+*Esta funcionalidad estará disponible próximamente como un sistema completo de gestión de tareas y calendario para tus propiedades de interés.*`
+}
+
+function generateSavePropertiesResponse(propertyNumbers: number[]): string {
+  return `💾 **¡Propiedades guardadas exitosamente!**
+
+Has guardado las ${propertyNumbers.length} propiedades seleccionadas: **${propertyNumbers.join(', ')}** en tu lista personal.
+
+🎯 **Ahora puedes:**
+• 📋 **Ver tu lista guardada** cuando quieras
+• 🔄 **Comparar propiedades** guardadas entre sí
+• 📊 **Generar Planes de Trabajo** más tarde con estas propiedades
+• ✏️ **Agregar notas** personales a cada propiedad
+• 📈 **Hacer seguimiento** de cambios de precios
+• 🔔 **Recibir alertas** sobre estas propiedades
+
+Las propiedades guardadas permanecerán en tu lista hasta que decidas eliminarlas.
+
+¿Necesitas buscar más propiedades o quieres hacer algo más con tu búsqueda actual?`
+}
+
+function extractPropertyNumbers(query: string): number[] {
+  const numbers: number[] = []
+  const lowerQuery = query.toLowerCase()
+
+  // For UI-based system, we want to extract numbers when there are explicit actions
+  const isUIAction = lowerQuery.includes('plan de trabajo') || lowerQuery.includes('guardar propiedades') ||
+                     lowerQuery.includes('he seleccionado') || lowerQuery.includes('he guardado')
+
+  if (!isUIAction) {
+    // Don't extract numbers if it's clearly a property search query
+    const isPropertySearch = lowerQuery.includes('dorm') || lowerQuery.includes('habitacion') ||
+                            lowerQuery.includes('baño') || lowerQuery.includes('bano') ||
+                            lowerQuery.includes('m2') || lowerQuery.includes('metro') ||
+                            lowerQuery.includes('precio') || lowerQuery.includes('usd') ||
+                            lowerQuery.includes('k') || lowerQuery.includes('mil') ||
+                            lowerQuery.includes('casa') || lowerQuery.includes('departamento') ||
+                            lowerQuery.includes('barrio') || lowerQuery.includes('zona')
+
+    if (isPropertySearch) {
+      console.log(`🔍 Skipping number extraction - detected property search context`)
+      return []
+    }
+  }
+
+  // Find all numbers in the query
+  const numberMatches = query.match(/\d+/g)
+
+  if (numberMatches) {
+    for (const match of numberMatches) {
+      const num = parseInt(match)
+      // Only accept numbers 1-10 as potential property selections
+      if (num >= 1 && num <= 10 && !numbers.includes(num)) {
+        numbers.push(num)
+      }
+    }
+  }
+
+  console.log(`📊 Extracted property numbers: [${numbers.join(', ')}] from query: "${query}"`)
+  return numbers.sort((a, b) => a - b)
+}
+
+// Cleaned up system - removed unnecessary functions
+
+export function generatePropertyFinderResponse(
+  query: string,
+  conversationContext?: string,
+  conversationHistory?: any[]
+): string {
+  const lowerQuery = query.toLowerCase()
+
+  // Check for Plan de Trabajo generation request (from UI)
+  if (lowerQuery.includes('generar plan de trabajo') || lowerQuery.includes('plan de trabajo con las propiedades')) {
+    const propertyNumbers = extractPropertyNumbers(query)
+    if (propertyNumbers.length > 0) {
+      return generateWorkPlanResponse(propertyNumbers)
+    }
+  }
+
+  // Check for save properties request (from UI)
+  if (lowerQuery.includes('guardar propiedades') || lowerQuery.includes('he guardado las propiedades')) {
+    const propertyNumbers = extractPropertyNumbers(query)
+    if (propertyNumbers.length > 0) {
+      return generateSavePropertiesResponse(propertyNumbers)
+    }
+  }
+
   // Check if it's a conversational message first
   if (isConversationalMessage(query)) {
     return generateConversationalResponse(query)
   }
 
-  // If not conversational, proceed with property search
-  const properties = findPropertiesByQuery(query)
+  // Enhanced property search with context
+  const previousCriteria = conversationHistory ? extractPreviousCriteria(conversationHistory) : null
+  const searchResult = findPropertiesByQueryWithContext(query, previousCriteria || undefined)
+
+  const { properties, usedCriteria, isModification } = searchResult
 
   if (properties.length === 0) {
-    return `No encontré propiedades que coincidan exactamente con tus criterios: "${query}".
+    const modificationText = isModification ?
+      `No encontré propiedades con los criterios modificados: "${query}".` :
+      `No encontré propiedades que coincidan exactamente con tus criterios: "${query}".`
+
+    return `${modificationText}
 
 🔍 **Sugerencias:**
 • Intenta ser más específico con el barrio (ej: "Nueva Córdoba", "Centro")
 • Ajusta el rango de precios (ej: "hasta 150K USD")
 • Cambia el tipo de propiedad (ej: "departamentos" o "casas")
 • Modifica el número de dormitorios (ej: "2 a 3 dormitorios")
+${isModification ? '• Prueba modificar menos criterios a la vez' : ''}
 
 **Barrios disponibles:** Nueva Córdoba, Centro, Villa Allende, Güemes, Alberdi, Arguello, Villa Belgrano, y más.`
   }
@@ -655,10 +1112,15 @@ export function generatePropertyFinderResponse(query: string): string {
   const totalFound = properties.length
   const showingText = totalFound > 10 ? ` (mostrando las 10 más económicas de ${totalFound} encontradas)` : ``
 
-  // Format applied filters
-  const appliedFilters = formatAppliedFilters(query)
+  // Format applied filters based on actual used criteria
+  const appliedFilters = formatAppliedFiltersFromCriteria(usedCriteria)
 
-  return `Encontré ${totalFound} propiedades que coinciden con tu búsqueda: "${query}"${showingText}
+  // Customize response based on whether it's a modification or new search
+  const searchTypeText = isModification ?
+    `Perfecto! Modifiqué tu búsqueda anterior y encontré ${totalFound} propiedades${showingText}` :
+    `Encontré ${totalFound} propiedades que coinciden con tu búsqueda: "${query}"${showingText}`
+
+  return `${searchTypeText}
 
 ${appliedFilters}**🏠 PROPIEDADES SELECCIONADAS:**
 
@@ -666,5 +1128,5 @@ ${propertiesText}
 
 ${totalFound > 10 ? `\n💡 **Tip:** Hay ${totalFound - 10} propiedades más disponibles. Refina tu búsqueda para ver diferentes opciones.` : ''}
 
-¿Te interesa información más detallada sobre alguna propiedad específica? ¿O prefieres ajustar los criterios de búsqueda?`
+💡 **¿Te interesan algunas de estas propiedades?** ${totalFound >= 4 ? 'Puedes seleccionar exactamente 4 usando los checkboxes para generar un Plan de Trabajo o guardarlas para más tarde.' : 'Necesitarías al menos 4 propiedades para poder generar un Plan de Trabajo.'}`
 }

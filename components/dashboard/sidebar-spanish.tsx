@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Building, Home, Search, BarChart3, Map, Heart, Settings, LogOut, AlertTriangle, MessageSquare } from "lucide-react"
+import { Building, Home, Search, BarChart3, Map, Heart, Settings, LogOut, AlertTriangle, MessageSquare, ClipboardList, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 // import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
@@ -83,6 +83,15 @@ export function Sidebar({ className }: SidebarProps) {
                 Findy AI
               </Button>
             </Link>
+            <Link href="/dashboard/ai-contenidos">
+              <Button
+                variant={pathname === "/dashboard/ai-contenidos" ? "secondary" : "ghost"}
+                className="w-full justify-start"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                AI Contenidos
+              </Button>
+            </Link>
             {/* TEMPORALMENTE OCULTO - Mapa del Mercado
             <Link href="/dashboard/map">
               <Button variant={pathname === "/dashboard/map" ? "secondary" : "ghost"} className="w-full justify-start">
@@ -91,7 +100,6 @@ export function Sidebar({ className }: SidebarProps) {
               </Button>
             </Link>
             */}
-            {/* TEMPORALMENTE OCULTO - Propiedades Guardadas
             <Link href="/dashboard/saved">
               <Button
                 variant={pathname === "/dashboard/saved" ? "secondary" : "ghost"}
@@ -101,7 +109,15 @@ export function Sidebar({ className }: SidebarProps) {
                 Propiedades Guardadas
               </Button>
             </Link>
-            */}
+            <Link href="/dashboard/workplans">
+              <Button
+                variant={pathname === "/dashboard/workplans" ? "secondary" : "ghost"}
+                className="w-full justify-start"
+              >
+                <ClipboardList className="mr-2 h-4 w-4" />
+                Planes de Trabajo
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="px-3 py-2">

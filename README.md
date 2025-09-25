@@ -1,30 +1,158 @@
-# re0 - Under active development. 
+# Real Estate AI Platform
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+AI-powered real estate investment platform built with Next.js 15, TypeScript, and multiple AI providers.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/rmourey26s-projects/v0-re0)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/Xt5V3kIYfuz)
+## Features
 
-## Overview
+- **Multi-AI Integration**: OpenAI GPT-4, Anthropic Claude-3-Opus, and Mistral AI
+- **Real Estate Analytics**: Property analysis, market insights, and CMA generation
+- **CSV Data Processing**: Real-time analysis of property data from Córdoba, Argentina
+- **Interactive Dashboard**: Market trends, opportunity zones, and property search
+- **Looker Studio Integration**: Embedded analytics dashboard
+- **Modern UI**: Built with shadcn/ui components and Tailwind CSS
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Tech Stack
 
-## Deployment
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Database**: Supabase (currently disabled for development)
+- **AI APIs**: OpenAI, Anthropic, Mistral
+- **Data**: CSV processing with real Córdoba property data
+- **Authentication**: Supabase Auth (disabled in development)
 
-Your project is live at:
+## Getting Started
 
-**[https://vercel.com/rmourey26s-projects/v0-re0](https://vercel.com/rmourey26s-projects/v0-re0)**
+### Prerequisites
 
-## Build your app
+- Node.js 18+
+- npm or pnpm
 
-Continue building your app on:
+### Installation
 
-**[https://v0.dev/chat/projects/Xt5V3kIYfuz](https://v0.dev/chat/projects/Xt5V3kIYfuz)**
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd real-estate-ai
+```
 
-## How It Works
+2. Install dependencies:
+```bash
+npm install
+# or
+pnpm install
+```
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your API keys:
+- Supabase credentials
+- OpenAI API key
+- Anthropic API key
+- Mistral API key
+- Google Maps API key
+
+### Development
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to see the application.
+
+### Building for Production
+
+```bash
+npm run build
+npm run start
+```
+
+## Deployment on Vercel
+
+### Quick Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/real-estate-ai)
+
+### Manual Deployment
+
+1. **Fork/Clone this repository to your GitHub account**
+
+2. **Create a new project on Vercel:**
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+
+3. **Configure Environment Variables in Vercel:**
+   - In your Vercel project settings, go to "Environment Variables"
+   - Add all variables from `.env.example`:
+     ```
+     NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+     NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+     OPENAI_API_KEY=your_openai_key
+     ANTHROPIC_API_KEY=your_anthropic_key
+     MISTRAL_API_KEY=your_mistral_key
+     GOOGLE_API_KEY=your_google_key
+     ```
+
+4. **Deploy:**
+   - Vercel will automatically build and deploy your application
+   - Your app will be available at `https://your-project-name.vercel.app`
+
+### Build Configuration
+
+The project is configured for Vercel deployment with:
+- Next.js 15 support
+- Automatic TypeScript compilation
+- Optimized production builds
+- Environment variable handling
+
+## Project Structure
+
+```
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes for AI analysis
+│   ├── dashboard/         # Protected dashboard pages
+│   └── auth/              # Authentication pages
+├── components/            # React components
+│   ├── ui/               # shadcn/ui components
+│   ├── dashboard/        # Dashboard-specific components
+│   └── analytics/        # Analytics components
+├── lib/                  # Utilities and configurations
+├── data/                 # CSV data files
+├── types/                # TypeScript type definitions
+└── styles/               # Global styles
+```
+
+## Development Status
+
+⚠️ **Authentication is currently disabled** for development purposes. All Supabase authentication checks are commented out. To re-enable:
+
+1. Uncomment authentication code in:
+   - `middleware.ts`
+   - `app/dashboard/layout.tsx`
+   - Auth-related components
+
+2. Configure Supabase properly with valid credentials
+
+## CSV Data
+
+The platform uses real property data from Córdoba, Argentina (`data/ZPAgosto.csv`) with:
+- Property types: Casa, Departamento
+- 50+ neighborhoods in Córdoba
+- Price, size, and location data
+- Real-time market analytics
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is private and proprietary.

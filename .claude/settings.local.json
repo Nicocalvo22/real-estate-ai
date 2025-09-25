@@ -4,7 +4,10 @@
       "Bash(pnpm dev:*)",
       "Bash(pnpm add:*)",
       "Bash(rm:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(node:*)",
+      "Bash(npm run build:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

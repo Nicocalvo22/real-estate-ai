@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Search, Home, ArrowLeft } from 'lucide-react'
@@ -45,7 +47,11 @@ export default function NotFound() {
               <Button
                 variant="outline"
                 className="flex-1 border-findy-electric/30 text-findy-electric hover:bg-findy-electric/10"
-                onClick={() => window.history.back()}
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.history.back()
+                  }
+                }}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Volver

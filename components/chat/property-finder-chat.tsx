@@ -5,14 +5,18 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Loader2, Send, Bot, User, Search, Home, DollarSign, MapPin } from "lucide-react"
+import { Loader2, Send, Bot, User, Search, Home, DollarSign, MapPin, FileText, Heart, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
 
 interface Message {
   id: string
   content: string
   role: "user" | "assistant"
   timestamp: Date
+  hasPropertyList?: boolean
 }
 
 interface PropertyFinderChatProps {
@@ -30,8 +34,14 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
   ])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedProperties, setSelectedProperties] = useState<number[]>([])
+  const [showPropertyActions, setShowPropertyActions] = useState(false)
+  const [availableProperties, setAvailableProperties] = useState<number>(0)
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const [saveName, setSaveName] = useState("")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
 
   const quickFilters = [
     { label: "Departamentos en Nueva Córdoba", icon: Home, query: "Busco departamentos en Nueva Córdoba", color: "findy-electric" },
@@ -51,7 +61,15 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages])
+  }, [messages, selectedProperties]) // Re-render when selection changes
+
+  // Force re-render of messages when selection changes
+  const [, setForceUpdate] = useState({})
+  useEffect(() => {
+    if (showPropertyActions) {
+      setForceUpdate({})
+    }
+  }, [selectedProperties, showPropertyActions])
 
   const handleSubmit = async (messageText?: string) => {
     const messageToSend = messageText || input.trim()
@@ -76,7 +94,11 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
         },
         body: JSON.stringify({
           message: messageToSend,
-          context: "Usuario buscando propiedades específicas en Córdoba, Argentina usando Property Finder AI"
+          context: "Usuario buscando propiedades específicas en Córdoba, Argentina usando Property Finder AI",
+          conversationHistory: messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
         }),
       })
 
@@ -86,14 +108,29 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
 
       const data = await response.json()
 
+      // Check if the response contains a property list and count them
+      const propertyCount = countPropertiesInResponse(data.response)
+      const hasPropertyList = propertyCount > 0
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: data.response,
         role: "assistant",
         timestamp: new Date(data.timestamp),
+        hasPropertyList: hasPropertyList
       }
 
       setMessages(prev => [...prev, assistantMessage])
+
+      // Show property selection interface if properties were found
+      if (hasPropertyList) {
+        setAvailableProperties(propertyCount)
+        setShowPropertyActions(true)
+        setSelectedProperties([]) // Reset selection
+        console.log(`🏠 Found ${propertyCount} properties, showing selection interface`)
+      } else {
+        setShowPropertyActions(false)
+      }
     } catch (error) {
       console.error('Error sending message:', error)
       const errorMessage: Message = {
@@ -113,6 +150,241 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
     handleSubmit(query)
   }
 
+  const handlePropertySelection = (propertyIndex: number, checked: boolean) => {
+    setSelectedProperties(prev => {
+      if (checked) {
+        return [...prev, propertyIndex]
+      } else {
+        return prev.filter(index => index !== propertyIndex)
+      }
+    })
+  }
+
+  const handleGenerateReport = async () => {
+    const requiredCount = Math.min(4, availableProperties)
+    if (selectedProperties.length !== requiredCount) {
+      toast({
+        title: "Selección Incompleta",
+        description: `Debes seleccionar exactamente ${requiredCount} propiedades para generar el Plan de Trabajo`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Check if there's already an active work plan
+    const existingPlans = JSON.parse(localStorage.getItem('workPlans') || '[]')
+    const hasActivePlan = existingPlans.some((plan: any) => plan.status === 'active')
+
+    if (hasActivePlan) {
+      toast({
+        title: "Plan de Trabajo Activo",
+        description: "Ya tienes un Plan de Trabajo activo. Completa el actual antes de crear uno nuevo.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const selectedNumbers = selectedProperties.sort((a, b) => a - b)
+
+    // Get selected properties data
+    const lastMessage = messages[messages.length - 1]
+    const selectedPropertiesData = selectedNumbers.map(num => {
+      const lines = lastMessage.content.split('\n')
+      let title = `Propiedad ${num}`
+      let url = 'URL no disponible'
+
+      // Find the property and extract data
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim().startsWith(`${num}.`)) {
+          title = lines[i].trim()
+
+          // Look for ZonaProp URL
+          for (let j = i + 1; j < Math.min(i + 15, lines.length); j++) {
+            const line = lines[j].trim()
+            if (line.includes('Ver en ZonaProp')) {
+              const urlMatch = line.match(/(https?:\/\/[^\s\)]+)/g)
+              if (urlMatch && urlMatch[0]) {
+                url = urlMatch[0]
+                break
+              }
+            }
+          }
+          break
+        }
+      }
+
+      return {
+        number: num,
+        title: title.replace(/^\d+\.\s/, '').replace(/\*\*(.*?)\*\*/g, '$1'),
+        url: url
+      }
+    })
+
+    // Start with empty tasks - user can add their own
+    const workPlanTasks: any[] = []
+
+    // Create work plan
+    const newWorkPlan = {
+      id: `workplan-${Date.now()}`,
+      name: `Análisis de ${selectedNumbers.length} Propiedades`,
+      description: `Plan de análisis detallado para las propiedades seleccionadas desde Findy AI`,
+      properties: selectedPropertiesData,
+      tasks: workPlanTasks,
+      createdAt: new Date().toISOString(),
+      status: 'active' as const
+    }
+
+    // Save to localStorage
+    const updatedPlans = [...existingPlans, newWorkPlan]
+    localStorage.setItem('workPlans', JSON.stringify(updatedPlans))
+
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: `He creado un Plan de Trabajo con las propiedades ${selectedNumbers.join(', ')}`,
+      role: "user",
+      timestamp: new Date(),
+    }
+
+    setMessages(prev => [...prev, userMessage])
+
+    // Add success response
+    const assistantMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      content: `✅ **¡Excelente!** He creado tu Plan de Trabajo **"${newWorkPlan.name}"** con las ${selectedNumbers.length} propiedades seleccionadas.\n\n**📋 Tu plan incluye:**\n• ${workPlanTasks.length} tareas organizadas\n• Análisis completo de cada propiedad\n• Sistema de seguimiento paso a paso\n• Acceso directo a las URLs de ZonaProp\n\n**🎯 Próximos pasos:**\n1. Ve a **"Planes de Trabajo"** en el menú lateral\n2. Comienza con la primera tarea: "${workPlanTasks[0].title}"\n3. Marca las tareas como completadas según avances\n4. Al completar todas las tareas, el plan se guardará automáticamente\n\n¡Tu Plan de Trabajo está listo y te espera! 🚀`,
+      role: "assistant",
+      timestamp: new Date(),
+    }
+
+    setMessages(prev => [...prev, assistantMessage])
+    setShowPropertyActions(false)
+    setSelectedProperties([])
+  }
+
+  const handleSavePropertiesClick = () => {
+    const requiredCount = Math.min(4, availableProperties)
+    if (selectedProperties.length !== requiredCount) {
+      toast({
+        title: "Selección Incompleta",
+        description: `Debes seleccionar exactamente ${requiredCount} propiedades para guardar`,
+        variant: "destructive",
+      })
+      return
+    }
+    setShowSaveDialog(true)
+  }
+
+  const handleSaveProperties = async () => {
+    if (!saveName.trim()) {
+      toast({
+        title: "Nombre Requerido",
+        description: "Por favor ingresa un nombre para identificar este guardado",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const selectedNumbers = selectedProperties.sort((a, b) => a - b)
+
+    // Get the selected properties from the last assistant message
+    const lastMessage = messages[messages.length - 1]
+    console.log('🔍 Full message content for parsing:', lastMessage.content)
+    console.log('🔍 Selected numbers to extract:', selectedNumbers)
+
+    const selectedPropertiesData = selectedNumbers.map(num => {
+      // Extract just the URL for each property - much simpler approach
+      const lines = lastMessage.content.split('\n')
+      let url = 'URL no disponible'
+      let title = `Propiedad ${num}`
+
+      // Find the property section and extract URL and title
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim().startsWith(`${num}.`)) {
+          // Get the title from the first line
+          title = lines[i].trim()
+
+          // Look for ZonaProp URL specifically - prioritize it over Google Maps
+          for (let j = i + 1; j < Math.min(i + 15, lines.length); j++) {
+            const line = lines[j].trim()
+            console.log(`🔍 Checking line ${j}: "${line}"`)
+
+            // First priority: Look specifically for ZonaProp URLs
+            if (line.includes('Ver en ZonaProp') || line.includes('🔗 Ver en ZonaProp')) {
+              const urlMatch = line.match(/(https?:\/\/[^\s\)]+)/g)
+              if (urlMatch && urlMatch[0]) {
+                url = urlMatch[0]
+                console.log(`✅ Found ZonaProp URL: ${url}`)
+                break
+              }
+            }
+          }
+
+          // If no ZonaProp URL found, look for any other URL (but skip Google Maps)
+          if (url === 'URL no disponible') {
+            for (let j = i + 1; j < Math.min(i + 15, lines.length); j++) {
+              const line = lines[j].trim()
+
+              // Skip Google Maps URLs
+              if (line.includes('http') && !line.includes('maps.google') && !line.includes('google.com/maps')) {
+                const urlMatch = line.match(/(https?:\/\/[^\s]+)/g)
+                if (urlMatch && urlMatch[0]) {
+                  url = urlMatch[0]
+                  console.log(`✅ Found alternative URL: ${url}`)
+                  break
+                }
+              }
+            }
+          }
+          break
+        }
+      }
+
+      console.log(`🔍 Property ${num}: ${title} - URL: ${url}`)
+
+      return {
+        number: num,
+        content: `${title}\n🔗 Ver en ZonaProp: ${url}`
+      }
+    })
+
+    // Save to localStorage (later we can move this to a proper backend)
+    const savedProperty = {
+      id: Date.now().toString(),
+      name: saveName.trim(),
+      properties: selectedPropertiesData,
+      savedAt: new Date().toISOString(),
+      searchQuery: messages[messages.length - 2]?.content || "Búsqueda personalizada",
+    }
+
+    const existingSaved = JSON.parse(localStorage.getItem('savedProperties') || '[]')
+    existingSaved.push(savedProperty)
+    localStorage.setItem('savedProperties', JSON.stringify(existingSaved))
+
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: `He guardado las propiedades ${selectedNumbers.join(', ')} con el nombre "${saveName}"`,
+      role: "user",
+      timestamp: new Date(),
+    }
+
+    setMessages(prev => [...prev, userMessage])
+
+    // Add success response
+    const assistantMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      content: `✅ **¡Perfecto!** He guardado tus ${selectedNumbers.length} propiedades seleccionadas con el nombre **"${saveName}"**.\n\nPuedes encontrar este guardado en la sección **"Propiedades Guardadas"** del menú lateral, donde podrás:\n• Ver todos los detalles de las propiedades\n• Generar reportes personalizados\n• Gestionar tus guardados\n\n¿Necesitas buscar más propiedades o quieres hacer algo más?`,
+      role: "assistant",
+      timestamp: new Date(),
+    }
+
+    setMessages(prev => [...prev, assistantMessage])
+    setShowPropertyActions(false)
+    setSelectedProperties([])
+    setShowSaveDialog(false)
+    setSaveName("")
+  }
+
   const formatTimestamp = (timestamp: Date) => {
     return timestamp.toLocaleTimeString('es-AR', {
       hour: '2-digit',
@@ -120,10 +392,34 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
     })
   }
 
+  // Function to count properties in the AI response
+  const countPropertiesInResponse = (content: string): number => {
+    // Count numbered properties like "1. **Departamento..." or "1. **Casa..."
+    const propertyMatches = content.match(/^\d+\.\s\*\*[^*]+\*\*/gm)
+    return propertyMatches ? propertyMatches.length : 0
+  }
+
   const renderMessageWithLinks = (content: string) => {
-    // Expresión regular para detectar URLs (http, https, www)
+    // First, add visual indicators to numbered properties
+    let processedContent = content.replace(
+      /^(\d+)\.\s(\*\*[^*]+\*\*[^]*?)(?=\n\d+\.|$)/gm,
+      (match, number, rest) => {
+        const isSelected = selectedProperties.includes(parseInt(number))
+        const bgColor = isSelected ? 'bg-findy-electric/10 border-findy-electric/30' : 'bg-gray-50/50 border-gray-200'
+        const icon = isSelected ? '✅' : '📍'
+        return `<div class="property-item p-3 my-2 border-l-4 ${bgColor}">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-lg">${icon}</span>
+            <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-findy-electric rounded-full">${number}</span>
+          </div>
+          ${number}. ${rest}
+        </div>`
+      }
+    )
+
+    // Then handle URLs
     const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g
-    const parts = content.split(urlRegex)
+    const parts = processedContent.split(urlRegex)
 
     return parts.map((part, index) => {
       if (part.match(urlRegex)) {
@@ -140,6 +436,10 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
             {part}
           </a>
         )
+      }
+      // Handle HTML content from property formatting
+      if (part.includes('<div class="property-item')) {
+        return <div key={index} dangerouslySetInnerHTML={{ __html: part }} />
       }
       return part
     })
@@ -244,6 +544,77 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
             </div>
           </ScrollArea>
         </CardContent>
+
+        {/* Property Selection Interface */}
+        {showPropertyActions && (
+          <div className="border-t border-findy-fuchsia/20 p-4 bg-gradient-to-r from-findy-fuchsia/5 to-findy-electric/5">
+            <div className="mb-4">
+              {(() => {
+                const requiredCount = Math.min(4, availableProperties);
+                return (
+                  <>
+                    <h4 className="text-sm font-semibold text-findy-fuchsia mb-2 flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Selecciona exactamente {requiredCount} {requiredCount === 1 ? 'propiedad' : 'propiedades'} para continuar
+                      <span className="text-xs bg-findy-electric/20 text-findy-electric px-2 py-1 rounded">
+                        {availableProperties} {availableProperties === 1 ? 'disponible' : 'disponibles'}
+                      </span>
+                    </h4>
+
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+                      {Array.from({ length: availableProperties }, (_, i) => i + 1).map((propertyNum) => (
+                        <div key={propertyNum} className="flex items-center space-x-2 p-2 rounded border border-findy-electric/20 hover:bg-findy-electric/5 transition-colors">
+                          <Checkbox
+                            id={`property-${propertyNum}`}
+                            checked={selectedProperties.includes(propertyNum)}
+                            onCheckedChange={(checked) => handlePropertySelection(propertyNum, checked as boolean)}
+                            className="data-[state=checked]:bg-findy-electric data-[state=checked]:border-findy-electric"
+                          />
+                          <label
+                            htmlFor={`property-${propertyNum}`}
+                            className="text-sm font-medium cursor-pointer flex-1"
+                          >
+                            📍 {propertyNum}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="text-center text-sm text-gray-600 mb-3">
+                      {selectedProperties.length === 0 && "No has seleccionado ninguna propiedad"}
+                      {selectedProperties.length > 0 && selectedProperties.length < requiredCount &&
+                        `Has seleccionado ${selectedProperties.length} propiedades. Necesitas ${requiredCount - selectedProperties.length} más.`}
+                      {selectedProperties.length === requiredCount && `¡Perfect! Has seleccionado exactamente ${requiredCount} propiedades.`}
+                      {selectedProperties.length > requiredCount && `Has seleccionado ${selectedProperties.length} propiedades. Debes seleccionar solo ${requiredCount}.`}
+                    </div>
+
+                    <div className="flex gap-3 justify-center">
+                      <Button
+                        onClick={handleGenerateReport}
+                        disabled={selectedProperties.length !== requiredCount || isLoading}
+                        className="bg-gradient-to-r from-findy-fuchsia to-findy-magenta hover:from-findy-fuchsia/80 hover:to-findy-magenta/80 text-white border-0 flex items-center gap-2"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Generar Plan de Trabajo
+                      </Button>
+
+                      <Button
+                        onClick={handleSavePropertiesClick}
+                        disabled={selectedProperties.length !== requiredCount || isLoading}
+                        variant="outline"
+                        className="border-findy-electric text-findy-electric hover:bg-findy-electric/10 flex items-center gap-2"
+                      >
+                        <Heart className="h-4 w-4" />
+                        Guardar Propiedades
+                      </Button>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
         <CardFooter className="pt-4">
           <form
             onSubmit={(e) => {
@@ -275,6 +646,64 @@ export function PropertyFinderChat({ className }: PropertyFinderChatProps) {
           </form>
         </CardFooter>
       </Card>
+
+      {/* Save Properties Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-findy-electric" />
+              Guardar Propiedades
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Dale un nombre a este guardado para poder identificarlo fácilmente más tarde.
+            </p>
+            <div className="space-y-2">
+              <label htmlFor="saveName" className="text-sm font-medium">
+                Nombre del guardado
+              </label>
+              <Input
+                id="saveName"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="Ej: Cliente Suárez, Propiedades Nueva Córdoba, etc."
+                maxLength={50}
+                className="w-full"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && saveName.trim()) {
+                    handleSaveProperties()
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+            <div className="text-xs text-gray-500">
+              Guardando {selectedProperties.length} propiedades seleccionadas
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowSaveDialog(false)
+                  setSaveName("")
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSaveProperties}
+                disabled={!saveName.trim()}
+                className="bg-gradient-to-r from-findy-electric to-findy-skyblue text-white"
+              >
+                <Heart className="h-4 w-4 mr-2" />
+                Guardar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
